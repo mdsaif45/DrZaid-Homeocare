@@ -1,9 +1,16 @@
+import { useEffect } from 'react';
 import { useAuthStore } from '../../store/authStore';
+import { usePatientStore } from '../../store/patientStore';
 import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
   const { user, logout } = useAuthStore();
+  const { stats, fetchStats } = usePatientStore();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
   const handleLogout = async () => {
     await logout();
@@ -46,25 +53,25 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatsCard
             title="Total Patients"
-            value="0"
+            value={stats?.total.toString() || '0'}
             icon="👥"
             color="bg-blue-500"
           />
           <StatsCard
-            title="Today's Appointments"
-            value="0"
+            title="This Month"
+            value={stats?.thisMonth.toString() || '0'}
             icon="📅"
             color="bg-green-500"
           />
           <StatsCard
-            title="Pending Follow-ups"
-            value="0"
+            title="This Week"
+            value={stats?.thisWeek.toString() || '0'}
             icon="🔔"
             color="bg-yellow-500"
           />
           <StatsCard
-            title="Case Records"
-            value="0"
+            title="Today"
+            value={stats?.today.toString() || '0'}
             icon="📋"
             color="bg-purple-500"
           />
@@ -78,19 +85,19 @@ export default function Dashboard() {
               icon="👤"
               title="Add New Patient"
               description="Register a new patient"
-              onClick={() => alert('Patient management coming soon!')}
+              onClick={() => navigate('/dashboard/patients/new')}
             />
             <QuickActionButton
               icon="📝"
-              title="Create Case Record"
-              description="Record consultation"
-              onClick={() => alert('Case records coming soon!')}
+              title="View All Patients"
+              description="Manage patient records"
+              onClick={() => navigate('/dashboard/patients')}
             />
             <QuickActionButton
               icon="🔍"
               title="Search Patients"
               description="Find patient records"
-              onClick={() => alert('Search feature coming soon!')}
+              onClick={() => navigate('/dashboard/patients')}
             />
           </div>
         </div>

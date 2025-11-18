@@ -9,7 +9,7 @@ import { db } from './config/database.js';
 
 // Import routes
 import authRoutes from './routes/authRoutes.js';
-// import patientRoutes from './routes/patientRoutes.js';
+import patientRoutes from './routes/patientRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -61,7 +61,7 @@ app.get('/api', (req, res) => {
 
 // Mount routes
 app.use('/api/auth', authRoutes);
-// app.use('/api/patients', patientRoutes);
+app.use('/api/patients', patientRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

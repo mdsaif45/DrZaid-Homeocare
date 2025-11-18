@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import Login from './pages/dashboard/Login';
 import Dashboard from './pages/dashboard/Dashboard';
+import PatientList from './pages/dashboard/PatientList';
+import PatientForm from './pages/dashboard/PatientForm';
 import ProtectedRoute from './components/common/ProtectedRoute';
 
 function App() {
@@ -25,6 +27,30 @@ function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/patients"
+          element={
+            <ProtectedRoute>
+              <PatientList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/patients/new"
+          element={
+            <ProtectedRoute>
+              <PatientForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/patients/:id/edit"
+          element={
+            <ProtectedRoute>
+              <PatientForm />
             </ProtectedRoute>
           }
         />
