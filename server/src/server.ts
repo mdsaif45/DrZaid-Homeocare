@@ -7,8 +7,8 @@ import { errorHandler } from './middleware/errorHandler.js';
 import { logger } from './utils/logger.js';
 import { db } from './config/database.js';
 
-// Import routes (will be created)
-// import authRoutes from './routes/authRoutes.js';
+// Import routes
+import authRoutes from './routes/authRoutes.js';
 // import patientRoutes from './routes/patientRoutes.js';
 
 // Load environment variables
@@ -59,8 +59,8 @@ app.get('/api', (req, res) => {
   });
 });
 
-// Mount routes (uncomment as you create them)
-// app.use('/api/auth', authRoutes);
+// Mount routes
+app.use('/api/auth', authRoutes);
 // app.use('/api/patients', patientRoutes);
 
 // Error handling middleware (must be last)
