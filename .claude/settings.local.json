@@ -4,7 +4,8 @@
       "Bash(dir:*)",
       "Bash(npm create:*)",
       "Bash(npm install:*)",
-      "Bash(npx tailwindcss:*)"
+      "Bash(npx tailwindcss:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

@@ -5,6 +5,8 @@ import Login from './pages/dashboard/Login';
 import Dashboard from './pages/dashboard/Dashboard';
 import PatientList from './pages/dashboard/PatientList';
 import PatientForm from './pages/dashboard/PatientForm';
+import PatientDetail from './pages/dashboard/PatientDetail';
+import CaseRecordForm from './pages/dashboard/CaseRecordForm';
 import ProtectedRoute from './components/common/ProtectedRoute';
 
 function App() {
@@ -51,6 +53,30 @@ function App() {
           element={
             <ProtectedRoute>
               <PatientForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/patients/:id"
+          element={
+            <ProtectedRoute>
+              <PatientDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/case-records/new"
+          element={
+            <ProtectedRoute>
+              <CaseRecordForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/case-records/:id/edit"
+          element={
+            <ProtectedRoute>
+              <CaseRecordForm />
             </ProtectedRoute>
           }
         />

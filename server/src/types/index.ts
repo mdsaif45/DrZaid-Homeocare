@@ -81,45 +81,116 @@ export interface CreatePatientRequest {
 export interface CaseRecord {
   id: number;
   patient_id: number;
-  created_by: number;
-  chief_complaints: string;
+  consultation_date: Date;
+
+  // Chief Complaints
+  chief_complaints?: string;
   complaint_tags?: string[];
-  past_family_history?: string;
-  general_mental_notes?: string;
-  examination_notes?: string;
-  bp_systolic?: number;
-  bp_diastolic?: number;
-  pulse?: number;
-  temperature?: number;
-  weight?: number;
-  height?: number;
-  investigation_files?: InvestigationFile[];
-  analysis_notes?: string;
+  complaint_duration?: string;
+
+  // History
+  past_history?: string;
+  family_history?: string;
+  surgical_history?: string;
+
+  // Examination
+  general_examination?: string;
+  mental_state_examination?: string;
+
+  // Analysis
+  clinical_notes?: string;
+  diagnosis?: string;
+  treatment_plan?: string;
+
+  // Follow-up
+  follow_up_notes?: string;
+  next_follow_up_date?: Date;
+
+  // Relations (populated)
+  vitals?: Vitals;
+  investigations?: Investigation[];
+
+  // Metadata
+  created_by?: number;
   created_at: Date;
   updated_at: Date;
 }
 
-export interface InvestigationFile {
-  filename: string;
-  url: string;
-  type: string;
-  date: string;
-}
-
 export interface CreateCaseRecordRequest {
   patient_id: number;
-  chief_complaints: string;
+  consultation_date?: string;
+  chief_complaints?: string;
   complaint_tags?: string[];
-  past_family_history?: string;
-  general_mental_notes?: string;
-  examination_notes?: string;
-  bp_systolic?: number;
-  bp_diastolic?: number;
-  pulse?: number;
+  complaint_duration?: string;
+  past_history?: string;
+  family_history?: string;
+  surgical_history?: string;
+  general_examination?: string;
+  mental_state_examination?: string;
+  clinical_notes?: string;
+  diagnosis?: string;
+  treatment_plan?: string;
+  follow_up_notes?: string;
+  next_follow_up_date?: string;
+}
+
+// Vitals Types
+export interface Vitals {
+  id: number;
+  case_record_id: number;
+  blood_pressure_systolic?: number;
+  blood_pressure_diastolic?: number;
+  pulse_rate?: number;
+  respiratory_rate?: number;
   temperature?: number;
-  weight?: number;
+  temperature_unit?: 'C' | 'F';
+  oxygen_saturation?: number;
   height?: number;
-  analysis_notes?: string;
+  weight?: number;
+  bmi?: number;
+  notes?: string;
+  recorded_at: Date;
+  created_at: Date;
+}
+
+export interface CreateVitalsRequest {
+  case_record_id: number;
+  blood_pressure_systolic?: number;
+  blood_pressure_diastolic?: number;
+  pulse_rate?: number;
+  respiratory_rate?: number;
+  temperature?: number;
+  temperature_unit?: 'C' | 'F';
+  oxygen_saturation?: number;
+  height?: number;
+  weight?: number;
+  notes?: string;
+}
+
+// Investigation Types
+export interface Investigation {
+  id: number;
+  case_record_id: number;
+  investigation_type?: string;
+  investigation_name?: string;
+  notes?: string;
+  findings?: string;
+  file_url?: string;
+  file_name?: string;
+  file_type?: string;
+  file_size?: number;
+  investigation_date?: Date;
+  uploaded_at: Date;
+  created_at: Date;
+}
+
+export interface CreateInvestigationRequest {
+  case_record_id: number;
+  investigation_type?: string;
+  investigation_name?: string;
+  notes?: string;
+  findings?: string;
+  investigation_date?: string;
 }
 
 // Prescription Types

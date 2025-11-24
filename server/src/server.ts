@@ -10,6 +10,9 @@ import { db } from './config/database.js';
 // Import routes
 import authRoutes from './routes/authRoutes.js';
 import patientRoutes from './routes/patientRoutes.js';
+import caseRecordRoutes from './routes/caseRecordRoutes.js';
+import vitalsRoutes from './routes/vitalsRoutes.js';
+import investigationRoutes from './routes/investigationRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -54,6 +57,9 @@ app.get('/api', (req, res) => {
       health: '/health',
       auth: '/api/auth',
       patients: '/api/patients',
+      caseRecords: '/api/case-records',
+      vitals: '/api/vitals',
+      investigations: '/api/investigations',
       appointments: '/api/appointments',
     },
   });
@@ -62,6 +68,9 @@ app.get('/api', (req, res) => {
 // Mount routes
 app.use('/api/auth', authRoutes);
 app.use('/api/patients', patientRoutes);
+app.use('/api/case-records', caseRecordRoutes);
+app.use('/api/vitals', vitalsRoutes);
+app.use('/api/investigations', investigationRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);
