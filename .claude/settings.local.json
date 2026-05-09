@@ -5,7 +5,8 @@
       "Bash(npm create:*)",
       "Bash(npm install:*)",
       "Bash(npx tailwindcss:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(docker compose *)"
     ],
     "deny": [],
     "ask": []

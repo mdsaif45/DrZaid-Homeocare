@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
+import Home from './pages/public/Home';
 import Login from './pages/dashboard/Login';
 import Dashboard from './pages/dashboard/Dashboard';
 import PatientList from './pages/dashboard/PatientList';
@@ -22,6 +23,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         {/* Public Routes */}
+        <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
 
         {/* Protected Routes */}
@@ -98,11 +100,8 @@ function App() {
           }
         />
 
-        {/* Default Route */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-
-        {/* 404 */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        {/* Default Redirects */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
