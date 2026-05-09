@@ -6,36 +6,18 @@ import { CreatePatientData } from '../../services/patientService';
 export default function PatientForm() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const {
-    currentPatient,
-    isLoading,
-    error,
-    createPatient,
-    updatePatient,
-    fetchPatientById,
-    clearCurrentPatient,
-    clearError,
-  } = usePatientStore();
+  const { currentPatient, isLoading, error, createPatient, updatePatient, fetchPatientById, clearCurrentPatient, clearError } = usePatientStore();
 
   const isEditMode = Boolean(id);
 
   const [formData, setFormData] = useState<CreatePatientData>({
-    full_name: '',
-    age: undefined,
-    gender: '',
-    contact_phone: '',
-    contact_email: '',
-    occupation: '',
-    address: '',
-    lifestyle_habits: '',
-    emergency_contact: '',
-    emergency_phone: '',
+    full_name: '', age: undefined, gender: '', contact_phone: '',
+    contact_email: '', occupation: '', address: '', lifestyle_habits: '',
+    emergency_contact: '', emergency_phone: '',
   });
 
   useEffect(() => {
-    if (isEditMode && id) {
-      fetchPatientById(parseInt(id));
-    }
+    if (isEditMode && id) fetchPatientById(parseInt(id));
     return () => clearCurrentPatient();
   }, [id, isEditMode]);
 
@@ -58,22 +40,15 @@ export default function PatientForm() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === 'age' ? (value ? parseInt(value) : undefined) : value,
-    }));
+    setFormData(prev => ({ ...prev, [name]: name === 'age' ? (value ? parseInt(value) : undefined) : value }));
     clearError();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     try {
-      if (isEditMode && id) {
-        await updatePatient(parseInt(id), formData);
-      } else {
-        await createPatient(formData);
-      }
+      if (isEditMode && id) await updatePatient(parseInt(id), formData);
+      else await createPatient(formData);
       navigate('/dashboard/patients');
     } catch (err) {
       console.error('Form submission error:', err);
@@ -81,209 +56,144 @@ export default function PatientForm() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-3xl mx-auto space-y-6">
       {/* Header */}
-      <div className="mb-6">
-        <button
-          onClick={() => navigate('/dashboard/patients')}
-          className="text-primary hover:text-primary-dark mb-4 flex items-center gap-2"
-        >
-          ← Back to Patients
+      <div>
+        <button onClick={() => navigate('/dashboard/patients')}
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-teal-600 transition mb-4">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Back to Patients
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">
-          {isEditMode ? 'Edit Patient' : 'Add New Patient'}
+        <h1 className="text-2xl font-extrabold text-slate-900">
+          {isEditMode ? 'Edit Patient' : 'Register New Patient'}
         </h1>
         {isEditMode && currentPatient && (
-          <p className="text-gray-600">Case ID: {currentPatient.case_id}</p>
+          <p className="text-sm text-slate-400 mt-1 font-medium">Case ID: {currentPatient.case_id}</p>
         )}
       </div>
 
-      {/* Error Message */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-800">{error}</p>
+        <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
+          <svg className="w-5 h-5 text-red-500 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" /><path strokeLinecap="round" d="M12 8v4m0 4h.01" />
+          </svg>
+          <p className="text-sm text-red-700 font-medium">{error}</p>
         </div>
       )}
 
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-5">
         {/* Basic Information */}
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
+        <FormSection title="Basic Information" icon="👤">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Full Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="full_name"
-                value={formData.full_name}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                placeholder="Enter patient's full name"
-              />
+              <Field label="Full Name" required>
+                <input type="text" name="full_name" value={formData.full_name} onChange={handleChange} required
+                  placeholder="Patient's full name" className={inputCls} />
+              </Field>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Age</label>
-              <input
-                type="number"
-                name="age"
-                value={formData.age || ''}
-                onChange={handleChange}
-                min="0"
-                max="150"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                placeholder="Age in years"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
-              <select
-                name="gender"
-                value={formData.gender}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-              >
-                <option value="">Select Gender</option>
+            <Field label="Age (years)">
+              <input type="number" name="age" value={formData.age || ''} onChange={handleChange} min="0" max="150"
+                placeholder="e.g. 35" className={inputCls} />
+            </Field>
+            <Field label="Gender">
+              <select name="gender" value={formData.gender} onChange={handleChange} className={inputCls}>
+                <option value="">Select gender</option>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
                 <option value="other">Other</option>
               </select>
-            </div>
+            </Field>
           </div>
-        </div>
+        </FormSection>
 
         {/* Contact Information */}
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Contact Information</h2>
+        <FormSection title="Contact Information" icon="📞">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Phone Number <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="tel"
-                name="contact_phone"
-                value={formData.contact_phone}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                placeholder="+91 XXXXX XXXXX"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input
-                type="email"
-                name="contact_email"
-                value={formData.contact_email}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                placeholder="patient@example.com"
-              />
-            </div>
-
+            <Field label="Phone Number" required>
+              <input type="tel" name="contact_phone" value={formData.contact_phone} onChange={handleChange} required
+                placeholder="+91 XXXXX XXXXX" className={inputCls} />
+            </Field>
+            <Field label="Email Address">
+              <input type="email" name="contact_email" value={formData.contact_email} onChange={handleChange}
+                placeholder="patient@example.com" className={inputCls} />
+            </Field>
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-              <textarea
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                rows={2}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                placeholder="Full address"
-              />
+              <Field label="Address">
+                <textarea name="address" value={formData.address} onChange={handleChange} rows={2}
+                  placeholder="Full residential address" className={inputCls + ' resize-none'} />
+              </Field>
             </div>
           </div>
-        </div>
+        </FormSection>
 
         {/* Additional Information */}
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Additional Information</h2>
+        <FormSection title="Clinical & Lifestyle" icon="🧬">
           <div className="grid grid-cols-1 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Occupation</label>
-              <input
-                type="text"
-                name="occupation"
-                value={formData.occupation}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                placeholder="e.g., Teacher, Engineer, Student"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Lifestyle Habits
-              </label>
-              <textarea
-                name="lifestyle_habits"
-                value={formData.lifestyle_habits}
-                onChange={handleChange}
-                rows={3}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                placeholder="Diet preferences, exercise, addictions, sleep patterns, etc."
-              />
-            </div>
+            <Field label="Occupation">
+              <input type="text" name="occupation" value={formData.occupation} onChange={handleChange}
+                placeholder="e.g. Teacher, Engineer, Student" className={inputCls} />
+            </Field>
+            <Field label="Lifestyle Habits">
+              <textarea name="lifestyle_habits" value={formData.lifestyle_habits} onChange={handleChange} rows={3}
+                placeholder="Diet, exercise routines, addictions, sleep patterns, stress levels, etc."
+                className={inputCls + ' resize-none'} />
+            </Field>
           </div>
-        </div>
+        </FormSection>
 
         {/* Emergency Contact */}
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Emergency Contact</h2>
+        <FormSection title="Emergency Contact" icon="🚨">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Contact Name</label>
-              <input
-                type="text"
-                name="emergency_contact"
-                value={formData.emergency_contact}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                placeholder="Emergency contact person"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Emergency Phone
-              </label>
-              <input
-                type="tel"
-                name="emergency_phone"
-                value={formData.emergency_phone}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                placeholder="+91 XXXXX XXXXX"
-              />
-            </div>
+            <Field label="Contact Person">
+              <input type="text" name="emergency_contact" value={formData.emergency_contact} onChange={handleChange}
+                placeholder="Full name" className={inputCls} />
+            </Field>
+            <Field label="Emergency Phone">
+              <input type="tel" name="emergency_phone" value={formData.emergency_phone} onChange={handleChange}
+                placeholder="+91 XXXXX XXXXX" className={inputCls} />
+            </Field>
           </div>
-        </div>
+        </FormSection>
 
-        {/* Form Actions */}
-        <div className="flex justify-end gap-4 pt-4 border-t">
-          <button
-            type="button"
-            onClick={() => navigate('/dashboard/patients')}
-            className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-          >
+        {/* Actions */}
+        <div className="flex justify-end gap-3 pt-2">
+          <button type="button" onClick={() => navigate('/dashboard/patients')}
+            className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition">
             Cancel
           </button>
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <button type="submit" disabled={isLoading}
+            className="px-6 py-2.5 bg-teal-600 text-white rounded-xl text-sm font-bold hover:bg-teal-700 transition shadow-md shadow-teal-600/20 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95">
             {isLoading ? 'Saving...' : isEditMode ? 'Update Patient' : 'Create Patient'}
           </button>
         </div>
       </form>
+    </div>
+  );
+}
+
+const inputCls = 'w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition';
+
+function FormSection({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) {
+  return (
+    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      <div className="flex items-center gap-3 px-6 py-4 border-b border-slate-50 bg-slate-50/50">
+        <span className="text-lg">{icon}</span>
+        <h2 className="text-sm font-extrabold text-slate-800">{title}</h2>
+      </div>
+      <div className="p-6">{children}</div>
+    </div>
+  );
+}
+
+function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+        {label}{required && <span className="text-red-500 ml-1">*</span>}
+      </label>
+      {children}
     </div>
   );
 }
