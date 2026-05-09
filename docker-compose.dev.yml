@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database (Same as before)
+  postgres:
+    image: postgres:15-alpine
+    container_name: homeocare-db-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: homeocare_db
+      POSTGRES_USER: homeocare_user
+      POSTGRES_PASSWORD: homeocare_db_pass_2026
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./database:/docker-entrypoint-initdb.d
+    networks:
+      - homeocare-dev-network
+
+  # Backend API in Dev Mode (Hot Reload)
+  api:
+    image: node:20-alpine
+    container_name: homeocare-api-dev
+    working_dir: /app
+    command: npm run dev
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: homeocare_db
+      DB_USER: homeocare_user
+      DB_PASSWORD: homeocare_db_pass_2026
+      JWT_SECRET: dr_zaid_super_secret_key_2026_jwt_access
+      JWT_REFRESH_SECRET: dr_zaid_super_secret_key_2026_jwt_refresh
+      CORS_ORIGIN: http://localhost:5173
+    depends_on:
+      - postgres
+    networks:
+      - homeocare-dev-network
+
+  # Frontend in Dev Mode (Hot Reload)
+  client:
+    image: node:20-alpine
+    container_name: homeocare-client-dev
+    working_dir: /app
+    command: npm run dev -- --host
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:3000/api
+    depends_on:
+      - api
+    networks:
+      - homeocare-dev-network
+
+networks:
+  homeocare-dev-network:
+    driver: bridge
+
+volumes:
+  postgres_dev_data:
