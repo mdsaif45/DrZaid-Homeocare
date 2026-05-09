@@ -10,12 +10,12 @@ import PatientDetail from './pages/dashboard/PatientDetail';
 import CaseRecordForm from './pages/dashboard/CaseRecordForm';
 import PrescriptionForm from './pages/dashboard/PrescriptionForm';
 import ProtectedRoute from './components/common/ProtectedRoute';
+import DashboardLayout from './components/common/DashboardLayout';
 
 function App() {
   const { initialize } = useAuthStore();
 
   useEffect(() => {
-    // Initialize auth state from localStorage
     initialize();
   }, [initialize]);
 
@@ -26,12 +26,12 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
 
-        {/* Protected Routes */}
+        {/* Protected Dashboard Routes — all share DashboardLayout */}
         <Route
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <DashboardLayout><Dashboard /></DashboardLayout>
             </ProtectedRoute>
           }
         />
@@ -39,7 +39,7 @@ function App() {
           path="/dashboard/patients"
           element={
             <ProtectedRoute>
-              <PatientList />
+              <DashboardLayout><PatientList /></DashboardLayout>
             </ProtectedRoute>
           }
         />
@@ -47,7 +47,7 @@ function App() {
           path="/dashboard/patients/new"
           element={
             <ProtectedRoute>
-              <PatientForm />
+              <DashboardLayout><PatientForm /></DashboardLayout>
             </ProtectedRoute>
           }
         />
@@ -55,7 +55,7 @@ function App() {
           path="/dashboard/patients/:id/edit"
           element={
             <ProtectedRoute>
-              <PatientForm />
+              <DashboardLayout><PatientForm /></DashboardLayout>
             </ProtectedRoute>
           }
         />
@@ -63,7 +63,7 @@ function App() {
           path="/dashboard/patients/:id"
           element={
             <ProtectedRoute>
-              <PatientDetail />
+              <DashboardLayout><PatientDetail /></DashboardLayout>
             </ProtectedRoute>
           }
         />
@@ -71,7 +71,7 @@ function App() {
           path="/dashboard/case-records/new"
           element={
             <ProtectedRoute>
-              <CaseRecordForm />
+              <DashboardLayout><CaseRecordForm /></DashboardLayout>
             </ProtectedRoute>
           }
         />
@@ -79,7 +79,7 @@ function App() {
           path="/dashboard/case-records/:id/edit"
           element={
             <ProtectedRoute>
-              <CaseRecordForm />
+              <DashboardLayout><CaseRecordForm /></DashboardLayout>
             </ProtectedRoute>
           }
         />
@@ -87,7 +87,7 @@ function App() {
           path="/dashboard/prescriptions/new"
           element={
             <ProtectedRoute>
-              <PrescriptionForm />
+              <DashboardLayout><PrescriptionForm /></DashboardLayout>
             </ProtectedRoute>
           }
         />
@@ -95,12 +95,11 @@ function App() {
           path="/dashboard/prescriptions/:id/edit"
           element={
             <ProtectedRoute>
-              <PrescriptionForm />
+              <DashboardLayout><PrescriptionForm /></DashboardLayout>
             </ProtectedRoute>
           }
         />
 
-        {/* Default Redirects */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

@@ -43,7 +43,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-your_secure_password}
       JWT_SECRET: ${JWT_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080}
     ports:
       - "3000:3000"
     volumes:
