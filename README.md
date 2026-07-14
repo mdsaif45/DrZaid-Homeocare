@@ -1,4 +1,4 @@
-# Dr. ZAID's Homeo Care - Clinic Management System
+# Dr. ZAID's Homeo Care - Clinic Management System (DrZaid-Homeocare)
 
 A comprehensive, production-ready web application for homeopathy clinic management with integrated EMR (Electronic Medical Records) system.
 
