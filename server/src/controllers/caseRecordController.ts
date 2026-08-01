@@ -1,10 +1,11 @@
 import { Response } from 'express';
-import { CaseRecordModel } from '../models/CaseRecord.js';
+import { CaseRecordService } from '../services/CaseRecordService.js';
 import { VitalsModel } from '../models/Vitals.js';
 import { InvestigationModel } from '../models/Investigation.js';
 import { AuthRequest, CreateCaseRecordRequest, CreateVitalsRequest, CreateInvestigationRequest } from '../types/index.js';
-import { asyncHandler } from '../middleware/errorHandler.js';
-import { AppError } from '../middleware/errorHandler.js';
+import { asyncHandler, AppError } from '../middleware/errorHandler.js';
+
+const caseRecordService = new CaseRecordService();
 
 /**
  * @desc    Get all case records for a patient
@@ -13,7 +14,7 @@ import { AppError } from '../middleware/errorHandler.js';
  */
 export const getCaseRecordsByPatient = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { patientId } = req.params;
-  const caseRecords = await CaseRecordModel.findByPatientId(parseInt(patientId));
+  const caseRecords = await caseRecordService.getCaseRecordsByPatient(parseInt(patientId));
 
   res.json({
     success: true,
@@ -28,7 +29,7 @@ export const getCaseRecordsByPatient = asyncHandler(async (req: AuthRequest, res
  */
 export const getCaseRecordById = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
-  const caseRecord = await CaseRecordModel.findByIdWithDetails(parseInt(id));
+  const caseRecord = await caseRecordService.getCaseRecordById(parseInt(id));
 
   if (!caseRecord) {
     throw new AppError('Case record not found', 404);
@@ -49,7 +50,7 @@ export const createCaseRecord = asyncHandler(async (req: AuthRequest, res: Respo
   const data: CreateCaseRecordRequest = req.body;
   const userId = req.user!.id;
 
-  const caseRecord = await CaseRecordModel.create(data, userId);
+  const caseRecord = await caseRecordService.createCaseRecord(data, userId);
 
   res.status(201).json({
     success: true,
@@ -67,7 +68,7 @@ export const updateCaseRecord = asyncHandler(async (req: AuthRequest, res: Respo
   const { id } = req.params;
   const data: Partial<CreateCaseRecordRequest> = req.body;
 
-  const caseRecord = await CaseRecordModel.update(parseInt(id), data);
+  const caseRecord = await caseRecordService.updateCaseRecord(parseInt(id), data);
 
   res.json({
     success: true,
@@ -83,7 +84,7 @@ export const updateCaseRecord = asyncHandler(async (req: AuthRequest, res: Respo
  */
 export const deleteCaseRecord = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
-  await CaseRecordModel.delete(parseInt(id));
+  await caseRecordService.deleteCaseRecord(parseInt(id));
 
   res.json({
     success: true,
@@ -103,7 +104,7 @@ export const searchCaseRecordsByTags = asyncHandler(async (req: AuthRequest, res
     throw new AppError('Please provide tags array', 400);
   }
 
-  const caseRecords = await CaseRecordModel.searchByComplaintTags(tags);
+  const caseRecords = await caseRecordService.searchByTags(tags);
 
   res.json({
     success: true,
@@ -118,7 +119,7 @@ export const searchCaseRecordsByTags = asyncHandler(async (req: AuthRequest, res
  */
 export const getRecentCaseRecords = asyncHandler(async (req: AuthRequest, res: Response) => {
   const limit = parseInt(req.query.limit as string) || 10;
-  const caseRecords = await CaseRecordModel.getRecent(limit);
+  const caseRecords = await caseRecordService.getRecent(limit);
 
   res.json({
     success: true,
