@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import Home from './pages/public/Home';
+import Consultant from './pages/public/Consultant';
 import Login from './pages/dashboard/Login';
 import Dashboard from './pages/dashboard/Dashboard';
 import PatientList from './pages/dashboard/PatientList';
@@ -24,6 +25,7 @@ function App() {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Home />} />
+        <Route path="/consultant" element={<Consultant />} />
         <Route path="/login" element={<Login />} />
 
         {/* Protected Dashboard Routes — all share DashboardLayout */}

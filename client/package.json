@@ -6,6 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "dev:landing": "vite --config vite.landing.config.ts --open /index.landing.html",
+    "build:landing": "tsc -b && vite build --config vite.landing.config.ts && node scripts/finalize-landing.mjs",
+    "preview:landing": "vite preview --config vite.landing.config.ts --outDir dist-landing",
     "lint": "eslint .",
     "preview": "vite preview"
   },
