@@ -14,6 +14,7 @@ import caseRecordRoutes from './routes/caseRecordRoutes.js';
 import vitalsRoutes from './routes/vitalsRoutes.js';
 import investigationRoutes from './routes/investigationRoutes.js';
 import prescriptionRoutes from './routes/prescriptionRoutes.js';
+import aiRoutes from './routes/aiRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -77,6 +78,7 @@ app.use('/api/case-records', caseRecordRoutes);
 app.use('/api/vitals', vitalsRoutes);
 app.use('/api/investigations', investigationRoutes);
 app.use('/api/prescriptions', prescriptionRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);
