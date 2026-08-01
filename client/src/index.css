@@ -47,3 +47,129 @@
 html {
   scroll-behavior: smooth;
 }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Motion system
+   ──────────────────────────────────────────────────────────────────────────
+   Only `transform` and `opacity` are animated, so every transition stays on
+   the compositor and never triggers layout. Reveal state is driven by the
+   `data-revealed` attribute set by the useReveal hook.
+
+   Anything expressive is gated behind `prefers-reduced-motion: no-preference`;
+   the reduced-motion path leaves content fully visible and static.
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* Fixed header offset for anchor links, so headings don't land under the nav. */
+:where([id]) {
+  scroll-margin-top: 6rem;
+}
+
+.reveal {
+  opacity: 1;
+}
+
+.stagger > * {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Hidden state is scoped to the un-revealed selector, so "revealed" is the
+     plain default rather than a transition endpoint. See the note on
+     .stagger below — this keeps content visible if the transition is skipped. */
+  .reveal:not([data-revealed='true']) {
+    opacity: 0;
+    transform: translate3d(0, 24px, 0);
+    will-change: transform, opacity;
+  }
+
+  .reveal {
+    transition:
+      opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+
+  /* Fallback reveal (see useReveal): show immediately, animate nothing. */
+  .reveal[data-instant],
+  .stagger[data-instant] > * {
+    transition: none !important;
+    transition-delay: 0ms !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* Children cascade in sequence once the container reveals.
+
+     Only children of a not-yet-revealed container start hidden. Scoping the
+     hidden state this way means the revealed state is a plain declaration
+     rather than something reachable only by running a transition — if the
+     browser skips the transition entirely (as it does in a background tab),
+     the content still ends up visible instead of stuck at opacity 0. */
+  .stagger:not([data-revealed='true']) > * {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0);
+  }
+
+  .stagger > * {
+    transition:
+      opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .stagger[data-revealed='true'] > *:nth-child(1) { transition-delay: 60ms; }
+  .stagger[data-revealed='true'] > *:nth-child(2) { transition-delay: 130ms; }
+  .stagger[data-revealed='true'] > *:nth-child(3) { transition-delay: 200ms; }
+  .stagger[data-revealed='true'] > *:nth-child(4) { transition-delay: 270ms; }
+  .stagger[data-revealed='true'] > *:nth-child(5) { transition-delay: 340ms; }
+  .stagger[data-revealed='true'] > *:nth-child(6) { transition-delay: 410ms; }
+
+  /* Hero entrance — plays on load, so it is a keyframe rather than a reveal. */
+  .hero-in {
+    animation: hero-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--hero-delay, 0ms);
+  }
+
+  @keyframes hero-in {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 28px, 0);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* Ambient drift for the hero background wash. Long duration and tiny
+     displacement keep it from reading as movement the eye has to track. */
+  .drift {
+    animation: drift 22s ease-in-out infinite alternate;
+  }
+
+  @keyframes drift {
+    from { transform: translate3d(0, 0, 0) scale(1); }
+    to   { transform: translate3d(0, -24px, 0) scale(1.06); }
+  }
+
+  /* Lift interactive cards on hover — pointer devices only, so touch users
+     don't get a stuck hover state after tapping. */
+  @media (hover: hover) and (pointer: fine) {
+    .lift {
+      transition:
+        transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+        border-color 0.35s ease;
+    }
+
+    .lift:hover {
+      transform: translate3d(0, -5px, 0);
+    }
+  }
+}
+
+/* Respect the OS setting for the CSS-only smooth scroll as well. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

@@ -1,10 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import Reveal from '../../components/common/Reveal';
+import { useReveal } from '../../hooks/useReveal';
 
 /**
  * Consultant landing page — positions Dr. MD Zaid as a consulting homeopath.
  *
  * Deployed standalone to GitHub Pages via `main.landing.tsx`, so this component
  * must stay free of API calls, auth state, and router dependencies.
+ *
+ * Motion is intentionally restrained: this is a medical practice page, so
+ * animation supports reading order rather than competing with it. No scroll
+ * hijacking, no custom cursor — a prospective patient looking for a phone
+ * number should never have to wait on an animation. All of it is disabled
+ * under prefers-reduced-motion (see index.css).
  */
 
 const WHATSAPP_NUMBER = '919876543210';
@@ -21,12 +29,39 @@ const NAV_LINKS = [
 export default function Consultant() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const lastY = useRef(0);
 
+  // Condense the header past the fold, and tuck it away while scrolling down so
+  // long copy gets the full viewport. Any upward scroll brings it straight back.
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    let frame = 0;
+
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        const y = window.scrollY;
+        setScrolled(y > 20);
+        // Ignore jitter, and never hide the nav near the top of the page.
+        if (Math.abs(y - lastY.current) > 8) {
+          setHidden(y > lastY.current && y > 220);
+          lastY.current = y;
+        }
+        frame = 0;
+      });
+    };
+
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
   }, []);
+
+  // A hidden header must not keep focusable links in the tab order.
+  useEffect(() => {
+    if (hidden) setMobileOpen(false);
+  }, [hidden]);
 
   const bookingHref = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
     "Hello Dr. Zaid, I'd like to book a homeopathic consultation.",
@@ -34,13 +69,20 @@ export default function Consultant() {
 
   return (
     <div className="min-h-screen bg-white font-sans selection:bg-teal-100">
+      <a
+        href="#top"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-100 focus:bg-teal-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:text-sm focus:font-bold"
+      >
+        Skip to content
+      </a>
+
       {/* ── Navigation ── */}
       <header
-        className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
+        className={`fixed top-0 inset-x-0 z-50 transition-[transform,background-color,box-shadow] duration-300 ease-out motion-reduce:transition-none ${
           scrolled
-            ? 'bg-white/95 backdrop-blur-lg shadow-sm border-b border-slate-100'
+            ? 'bg-white/90 backdrop-blur-lg shadow-sm border-b border-slate-100'
             : 'bg-transparent'
-        }`}
+        } ${hidden && !mobileOpen ? '-translate-y-full' : 'translate-y-0'}`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
@@ -124,15 +166,18 @@ export default function Consultant() {
       <main id="top">
         {/* ── Hero ── */}
         <section className="relative flex items-center overflow-hidden bg-linear-to-br from-slate-50 via-white to-teal-50/40">
-          <div className="absolute inset-0 -z-10 overflow-hidden">
-            <div className="absolute -top-40 -right-40 w-175 h-175 bg-teal-400/10 rounded-full blur-[120px]" />
-            <div className="absolute bottom-0 -left-40 w-125 h-125 bg-teal-600/8 rounded-full blur-[100px]" />
+          <div className="absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
+            <div className="drift absolute -top-40 -right-40 w-175 h-175 bg-teal-400/10 rounded-full blur-[120px]" />
+            <div
+              className="drift absolute bottom-0 -left-40 w-125 h-125 bg-teal-600/8 rounded-full blur-[100px]"
+              style={{ animationDelay: '-11s' }}
+            />
           </div>
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-36 pb-24 w-full">
             <div className="grid lg:grid-cols-12 gap-16 items-center">
               <div className="lg:col-span-7">
-                <div className="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 px-4 py-1.5 rounded-full mb-8">
+                <div className="hero-in inline-flex items-center gap-2 bg-teal-50 border border-teal-200 px-4 py-1.5 rounded-full mb-8">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-500 opacity-75" />
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-600" />
@@ -142,41 +187,68 @@ export default function Consultant() {
                   </span>
                 </div>
 
-                <h1 className="text-4xl sm:text-5xl xl:text-6xl font-extrabold text-slate-900 leading-[1.1] tracking-tight mb-6">
-                  A homeopath who takes<br />
-                  <span className="text-teal-600">the full case.</span>
+                {/* Fluid scale: tracks viewport width between the two bounds so
+                    the headline holds its proportion without breakpoint jumps. */}
+                <h1
+                  className="font-extrabold text-slate-900 leading-[1.08] tracking-tight mb-6"
+                  style={{ fontSize: 'clamp(2.25rem, 5.2vw, 4rem)' }}
+                >
+                  <span className="hero-in block" style={{ ['--hero-delay' as string]: '80ms' }}>
+                    A homeopath who takes
+                  </span>
+                  <span
+                    className="hero-in block text-teal-600"
+                    style={{ ['--hero-delay' as string]: '180ms' }}
+                  >
+                    the full case.
+                  </span>
                 </h1>
 
-                <p className="text-lg md:text-xl text-slate-500 leading-relaxed mb-10 max-w-2xl">
+                <p
+                  className="hero-in text-lg md:text-xl text-slate-500 leading-relaxed mb-10 max-w-2xl"
+                  style={{ ['--hero-delay' as string]: '280ms' }}
+                >
                   I'm Dr. MD Zaid, BHMS — a consulting classical homeopath. Every patient gets a
                   60&#8209;minute first consultation, a remedy matched to their whole constitution, and
                   structured follow-up with progress tracked in writing. No templates, no guesswork.
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-4 mb-12">
+                <div
+                  className="hero-in flex flex-col sm:flex-row gap-4 mb-12"
+                  style={{ ['--hero-delay' as string]: '380ms' }}
+                >
                   <a
                     href={bookingHref}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 bg-teal-600 text-white px-8 py-4 rounded-xl font-bold text-base hover:bg-teal-700 transition-all shadow-lg shadow-teal-600/30 active:scale-95"
+                    className="group inline-flex items-center justify-center gap-2 bg-teal-600 text-white px-8 py-4 rounded-xl font-bold text-base transition-[background-color,transform,box-shadow] duration-300 hover:bg-teal-700 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-teal-600/40 shadow-lg shadow-teal-600/30 active:translate-y-0 active:scale-[0.98] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
                   >
                     Book a Consultation
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                    {/* Arrow nudges forward on hover — a small directional cue. */}
+                    <svg
+                      className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1 motion-reduce:transition-none"
+                      fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"
+                    >
                       <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                     </svg>
                   </a>
                   <a
                     href="#consultations"
-                    className="inline-flex items-center justify-center gap-2 bg-white text-slate-800 border border-slate-200 px-8 py-4 rounded-xl font-bold text-base hover:border-teal-300 hover:text-teal-700 transition-all active:scale-95"
+                    className="inline-flex items-center justify-center gap-2 bg-white text-slate-800 border border-slate-200 px-8 py-4 rounded-xl font-bold text-base transition-[color,border-color,transform] duration-300 hover:border-teal-300 hover:text-teal-700 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
                   >
                     See formats &amp; fees
                   </a>
                 </div>
 
-                <dl className="flex flex-wrap gap-x-10 gap-y-6 pt-8 border-t border-slate-100">
+                <dl
+                  className="hero-in flex flex-wrap gap-x-10 gap-y-6 pt-8 border-t border-slate-100"
+                  style={{ ['--hero-delay' as string]: '480ms' }}
+                >
                   {STATS.map(([val, label]) => (
                     <div key={label}>
-                      <dd className="text-2xl font-extrabold text-slate-900">{val}</dd>
+                      <dd className="text-2xl font-extrabold text-slate-900 tabular-nums">
+                        <CountUp value={val} />
+                      </dd>
                       <dt className="text-xs font-semibold text-slate-400 uppercase tracking-wide mt-0.5">{label}</dt>
                     </div>
                   ))}
@@ -184,7 +256,10 @@ export default function Consultant() {
               </div>
 
               {/* Consultation summary card */}
-              <div className="lg:col-span-5">
+              <div
+                className="hero-in lg:col-span-5"
+                style={{ ['--hero-delay' as string]: '320ms' }}
+              >
                 <div className="relative bg-white rounded-3xl shadow-2xl shadow-slate-200/80 p-8 border border-slate-100">
                   <p className="text-xs font-bold text-teal-600 uppercase tracking-widest mb-6">
                     What a first consultation includes
@@ -217,14 +292,14 @@ export default function Consultant() {
         {/* ── Trust bar ── */}
         <section className="bg-slate-900 py-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-wrap items-center justify-center lg:justify-between gap-x-8 gap-y-4">
+            <Reveal stagger className="flex flex-wrap items-center justify-center lg:justify-between gap-x-8 gap-y-4">
               {TRUST_ITEMS.map(({ icon, text }) => (
                 <div key={text} className="flex items-center gap-2.5">
-                  <span className="text-xl">{icon}</span>
+                  <span className="text-xl" aria-hidden="true">{icon}</span>
                   <span className="text-sm font-semibold text-slate-300">{text}</span>
                 </div>
               ))}
-            </div>
+            </Reveal>
           </div>
         </section>
 
@@ -232,7 +307,7 @@ export default function Consultant() {
         <section id="credentials" className="py-28">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid lg:grid-cols-2 gap-16 lg:gap-20 items-start">
-              <div>
+              <Reveal>
                 <SectionEyebrow>About the consultant</SectionEyebrow>
                 <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-6 leading-tight">
                   Twelve years of classical<br />homeopathic practice.
@@ -256,17 +331,20 @@ export default function Consultant() {
                     work alongside your existing physicians.
                   </p>
                 </div>
-              </div>
+              </Reveal>
 
-              <div className="grid sm:grid-cols-2 gap-4">
+              <Reveal stagger className="grid sm:grid-cols-2 gap-4">
                 {CREDENTIALS.map(({ icon, title, desc }) => (
-                  <div key={title} className="bg-white border border-slate-100 rounded-2xl p-6 hover:shadow-lg hover:shadow-slate-100 transition-shadow">
-                    <div className="text-2xl mb-3">{icon}</div>
+                  <div
+                    key={title}
+                    className="lift bg-white border border-slate-100 rounded-2xl p-6 hover:shadow-lg hover:shadow-slate-100 hover:border-teal-200"
+                  >
+                    <div className="text-2xl mb-3" aria-hidden="true">{icon}</div>
                     <h3 className="font-bold text-slate-900 text-sm mb-1.5">{title}</h3>
                     <p className="text-slate-500 text-xs leading-relaxed">{desc}</p>
                   </div>
                 ))}
-              </div>
+              </Reveal>
             </div>
           </div>
         </section>
@@ -274,7 +352,7 @@ export default function Consultant() {
         {/* ── Consultation formats & fees ── */}
         <section id="consultations" className="py-28 bg-slate-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-2xl mx-auto mb-16">
+            <Reveal className="text-center max-w-2xl mx-auto mb-16">
               <SectionEyebrow center>Consultation formats</SectionEyebrow>
               <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-5 leading-tight">
                 Transparent formats, transparent fees
@@ -282,11 +360,11 @@ export default function Consultant() {
               <p className="text-lg text-slate-500 leading-relaxed">
                 No packages you have to commit to up front. Book what you need, when you need it.
               </p>
-            </div>
+            </Reveal>
 
-            <div className="grid md:grid-cols-3 gap-6 items-start">
+            <Reveal stagger className="grid md:grid-cols-3 gap-6 items-start">
               {CONSULT_TIERS.map(tier => <TierCard key={tier.name} {...tier} bookingHref={bookingHref} />)}
-            </div>
+            </Reveal>
 
             <p className="text-center text-sm text-slate-400 mt-10 max-w-2xl mx-auto">
               Remedies are dispensed separately and typically cost ₹150–₹400 per month. Fees are
@@ -298,7 +376,7 @@ export default function Consultant() {
         {/* ── Conditions ── */}
         <section id="conditions" className="py-28">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-2xl mx-auto mb-16">
+            <Reveal className="text-center max-w-2xl mx-auto mb-16">
               <SectionEyebrow center>Areas of focus</SectionEyebrow>
               <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-5 leading-tight">
                 Conditions I see most often
@@ -306,11 +384,11 @@ export default function Consultant() {
               <p className="text-lg text-slate-500 leading-relaxed">
                 Chronic, constitutional cases where sustained attention changes the outcome.
               </p>
-            </div>
+            </Reveal>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Reveal stagger className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {CONDITIONS.map(c => <ConditionCard key={c.title} {...c} />)}
-            </div>
+            </Reveal>
           </div>
         </section>
 
@@ -318,7 +396,7 @@ export default function Consultant() {
         <section id="process" className="py-28 bg-slate-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid lg:grid-cols-2 gap-16 lg:gap-20 items-start">
-              <div>
+              <Reveal>
                 <SectionEyebrow>How it works</SectionEyebrow>
                 <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-5 leading-tight">
                   What working together<br /><span className="text-teal-600">actually looks like.</span>
@@ -326,27 +404,16 @@ export default function Consultant() {
                 <p className="text-lg text-slate-500 leading-relaxed">
                   Four stages, and you'll know at each point what happens next and roughly when.
                 </p>
-              </div>
+              </Reveal>
 
               <ol className="space-y-0">
                 {PROCESS_STEPS.map((step, i) => (
-                  <li key={step.title} className="flex gap-6">
-                    <div className="flex flex-col items-center">
-                      <div className="w-11 h-11 rounded-xl bg-teal-600 flex items-center justify-center text-white font-extrabold text-sm shadow-lg shadow-teal-600/25 shrink-0 z-10">
-                        {String(i + 1).padStart(2, '0')}
-                      </div>
-                      {i < PROCESS_STEPS.length - 1 && <div className="w-px flex-1 bg-teal-200 my-1" />}
-                    </div>
-                    <div className={i === PROCESS_STEPS.length - 1 ? '' : 'pb-10'}>
-                      <div className="flex flex-wrap items-center gap-3 mb-2">
-                        <h3 className="text-lg font-bold text-slate-900">{step.title}</h3>
-                        <span className="text-xs font-bold text-teal-700 bg-teal-50 border border-teal-100 px-2.5 py-0.5 rounded-full">
-                          {step.when}
-                        </span>
-                      </div>
-                      <p className="text-slate-500 leading-relaxed">{step.desc}</p>
-                    </div>
-                  </li>
+                  <ProcessStep
+                    key={step.title}
+                    step={step}
+                    index={i}
+                    isLast={i === PROCESS_STEPS.length - 1}
+                  />
                 ))}
               </ol>
             </div>
@@ -356,15 +423,15 @@ export default function Consultant() {
         {/* ── Testimonials ── */}
         <section className="py-28">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-2xl mx-auto mb-16">
+            <Reveal className="text-center max-w-2xl mx-auto mb-16">
               <SectionEyebrow center>Patient experiences</SectionEyebrow>
               <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-5">
                 In their own words
               </h2>
-            </div>
-            <div className="grid md:grid-cols-3 gap-6">
+            </Reveal>
+            <Reveal stagger className="grid md:grid-cols-3 gap-6">
               {TESTIMONIALS.map(t => <TestimonialCard key={t.name} {...t} />)}
-            </div>
+            </Reveal>
             <p className="text-center text-xs text-slate-400 mt-10">
               Individual results vary. Testimonials describe personal experience and are not a
               guarantee of clinical outcome.
@@ -375,15 +442,15 @@ export default function Consultant() {
         {/* ── FAQ ── */}
         <section id="faq" className="py-28 bg-slate-50">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-14">
+            <Reveal className="text-center mb-14">
               <SectionEyebrow center>Common questions</SectionEyebrow>
               <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900">
                 Before you book
               </h2>
-            </div>
-            <div className="space-y-3">
+            </Reveal>
+            <Reveal stagger className="space-y-3">
               {FAQS.map(faq => <FaqItem key={faq.q} {...faq} />)}
-            </div>
+            </Reveal>
           </div>
         </section>
 
@@ -391,12 +458,15 @@ export default function Consultant() {
         <section id="book" className="py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="relative bg-slate-900 rounded-4xl overflow-hidden">
-              <div className="absolute inset-0 overflow-hidden z-0">
-                <div className="absolute top-0 right-0 w-125 h-125 bg-teal-600/20 rounded-full blur-[100px]" />
-                <div className="absolute bottom-0 left-0 w-100 h-100 bg-teal-400/10 rounded-full blur-[80px]" />
+              <div className="absolute inset-0 overflow-hidden z-0" aria-hidden="true">
+                <div className="drift absolute top-0 right-0 w-125 h-125 bg-teal-600/20 rounded-full blur-[100px]" />
+                <div
+                  className="drift absolute bottom-0 left-0 w-100 h-100 bg-teal-400/10 rounded-full blur-[80px]"
+                  style={{ animationDelay: '-8s' }}
+                />
               </div>
 
-              <div className="relative z-10 px-8 py-16 md:px-16 md:py-20 text-center max-w-3xl mx-auto">
+              <Reveal className="relative z-10 px-8 py-16 md:px-16 md:py-20 text-center max-w-3xl mx-auto">
                 <SectionEyebrow dark center>Book an appointment</SectionEyebrow>
                 <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-6 leading-tight">
                   Ready to have your whole case heard?
@@ -438,7 +508,7 @@ export default function Consultant() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </Reveal>
             </div>
           </div>
         </section>
@@ -612,6 +682,101 @@ const FAQS = [
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
+/**
+ * One numbered stage of the process timeline.
+ *
+ * Reveals itself, and grows its connector line toward the next step, so the
+ * sequence reads in order as the reader scrolls rather than arriving at once.
+ */
+function ProcessStep({
+  step, index, isLast,
+}: {
+  step: { title: string; when: string; desc: string };
+  index: number;
+  isLast: boolean;
+}) {
+  const { ref, revealed, instant } = useReveal<HTMLLIElement>({ threshold: 0.5 });
+
+  return (
+    <li
+      ref={ref}
+      data-revealed={revealed}
+      data-instant={instant || undefined}
+      className="reveal flex gap-6"
+    >
+      <div className="flex flex-col items-center" aria-hidden="true">
+        <div className="w-11 h-11 rounded-xl bg-teal-600 flex items-center justify-center text-white font-extrabold text-sm shadow-lg shadow-teal-600/25 shrink-0 z-10">
+          {String(index + 1).padStart(2, '0')}
+        </div>
+        {!isLast && (
+          <div className="w-px flex-1 my-1 bg-teal-100 relative overflow-hidden">
+            {/* scaleY rather than height: transform stays off the layout path. */}
+            <span
+              className={`absolute inset-0 bg-teal-500 origin-top transition-transform duration-700 ease-out motion-reduce:transition-none ${
+                revealed ? 'scale-y-100' : 'scale-y-0'
+              }`}
+              style={{ transitionDelay: '160ms' }}
+            />
+          </div>
+        )}
+      </div>
+      <div className={isLast ? '' : 'pb-10'}>
+        <div className="flex flex-wrap items-center gap-3 mb-2">
+          <h3 className="text-lg font-bold text-slate-900">{step.title}</h3>
+          <span className="text-xs font-bold text-teal-700 bg-teal-50 border border-teal-100 px-2.5 py-0.5 rounded-full">
+            {step.when}
+          </span>
+        </div>
+        <p className="text-slate-500 leading-relaxed">{step.desc}</p>
+      </div>
+    </li>
+  );
+}
+
+/**
+ * Counts a stat up to its final value once scrolled into view.
+ *
+ * Takes the display string (e.g. "5,000+", "12 yrs") and animates only the
+ * numeric part, preserving any prefix/suffix. The final rendered text is always
+ * exactly the input string, so nothing depends on the animation completing.
+ */
+function CountUp({ value, duration = 1100 }: { value: string; duration?: number }) {
+  const { ref, revealed } = useReveal<HTMLSpanElement>({ threshold: 0.4 });
+  const [display, setDisplay] = useState<string | null>(null);
+
+  const match = value.match(/^(\D*)([\d,]+)(.*)$/);
+  const target = match ? Number(match[2].replace(/,/g, '')) : NaN;
+
+  useEffect(() => {
+    if (!revealed || !match || Number.isNaN(target)) return;
+
+    // Honour the OS reduced-motion setting: jump straight to the value.
+    const reduced =
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) return;
+
+    let frame = 0;
+    let start: number | null = null;
+
+    const tick = (now: number) => {
+      start ??= now;
+      const t = Math.min((now - start) / duration, 1);
+      // Ease-out cubic: fast start, gentle settle.
+      const eased = 1 - Math.pow(1 - t, 3);
+      const current = Math.round(target * eased);
+      setDisplay(`${match[1]}${current.toLocaleString('en-IN')}${match[3]}`);
+      if (t < 1) frame = requestAnimationFrame(tick);
+      else setDisplay(null); // hand back to the exact source string
+    };
+
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [revealed, target, duration, value]);
+
+  return <span ref={ref}>{display ?? value}</span>;
+}
+
 function SectionEyebrow({ children, center, dark }: { children: React.ReactNode; center?: boolean; dark?: boolean }) {
   return (
     <span
@@ -634,10 +799,10 @@ function TierCard({
 }) {
   return (
     <div
-      className={`rounded-2xl p-7 transition-all ${
+      className={`lift rounded-2xl p-7 ${
         featured
-          ? 'bg-slate-900 border border-slate-900 shadow-2xl shadow-slate-300/50 md:-mt-4 md:pb-11'
-          : 'bg-white border border-slate-100 hover:shadow-lg hover:shadow-slate-100'
+          ? 'bg-slate-900 border border-slate-900 shadow-2xl shadow-slate-300/50 md:-mt-4 md:pb-11 hover:shadow-slate-400/50'
+          : 'bg-white border border-slate-100 hover:shadow-lg hover:shadow-slate-100 hover:border-teal-200'
       }`}
     >
       {featured && (
@@ -671,7 +836,7 @@ function TierCard({
         href={bookingHref}
         target="_blank"
         rel="noopener noreferrer"
-        className={`block text-center w-full py-3 rounded-xl text-sm font-bold transition-all active:scale-95 ${
+        className={`block text-center w-full py-3 rounded-xl text-sm font-bold transition-[background-color,color,border-color,box-shadow] duration-300 active:scale-[0.98] ${
           featured
             ? 'bg-teal-600 text-white hover:bg-teal-500 shadow-lg shadow-teal-600/30'
             : 'bg-slate-50 text-slate-800 border border-slate-200 hover:border-teal-300 hover:text-teal-700'
@@ -687,9 +852,12 @@ function ConditionCard({ icon, title, tag, desc, items }: {
   icon: string; title: string; tag: string; desc: string; items: string[];
 }) {
   return (
-    <div className="group bg-white border border-slate-100 rounded-2xl p-7 hover:border-teal-200 hover:shadow-xl hover:shadow-teal-50 transition-all">
+    <div className="lift group bg-white border border-slate-100 rounded-2xl p-7 hover:border-teal-200 hover:shadow-xl hover:shadow-teal-50">
       <div className="flex items-start justify-between mb-5">
-        <div className="w-12 h-12 bg-teal-50 rounded-xl flex items-center justify-center text-2xl group-hover:bg-teal-100 transition-colors">
+        <div
+          className="w-12 h-12 bg-teal-50 rounded-xl flex items-center justify-center text-2xl transition-[background-color,transform] duration-300 group-hover:bg-teal-100 group-hover:scale-110 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+          aria-hidden="true"
+        >
           {icon}
         </div>
         <span className="text-xs font-bold text-teal-600 bg-teal-50 border border-teal-100 px-2.5 py-1 rounded-full">{tag}</span>
@@ -711,7 +879,7 @@ function TestimonialCard({ name, role, quote, stars }: {
   name: string; role: string; quote: string; stars: number;
 }) {
   return (
-    <figure className="bg-white border border-slate-100 rounded-2xl p-7 hover:shadow-lg hover:shadow-slate-100 transition-shadow">
+    <figure className="lift bg-white border border-slate-100 rounded-2xl p-7 hover:shadow-lg hover:shadow-slate-100 hover:border-teal-200">
       <div className="flex gap-0.5 mb-5">
         {Array.from({ length: stars }).map((_, i) => (
           <svg key={i} className="w-4 h-4 fill-amber-400 text-amber-400" viewBox="0 0 24 24">
@@ -735,12 +903,13 @@ function TestimonialCard({ name, role, quote, stars }: {
 
 function FaqItem({ q, a }: { q: string; a: string }) {
   return (
-    <details className="group bg-white border border-slate-100 rounded-2xl overflow-hidden">
-      <summary className="flex items-center justify-between gap-4 px-6 py-5 cursor-pointer list-none">
+    <details className="group bg-white border border-slate-100 rounded-2xl overflow-hidden transition-colors duration-300 hover:border-teal-200 open:border-teal-200">
+      <summary className="flex items-center justify-between gap-4 px-6 py-5 cursor-pointer list-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600">
         <span className="text-sm font-bold text-slate-900">{q}</span>
         <svg
-          className="w-5 h-5 text-teal-600 shrink-0 transition-transform group-open:rotate-45"
+          className="w-5 h-5 text-teal-600 shrink-0 transition-transform duration-300 group-open:rotate-45 motion-reduce:transition-none"
           viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+          aria-hidden="true"
         >
           <path strokeLinecap="round" d="M12 5v14M5 12h14" />
         </svg>
