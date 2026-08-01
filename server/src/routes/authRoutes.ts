@@ -8,12 +8,14 @@ import {
   changePassword,
 } from '../controllers/authController.js';
 import { protect } from '../middleware/authMiddleware.js';
+import { validateRequest } from '../middleware/validate.js';
+import { loginSchema, registerSchema } from '../schemas/index.js';
 
 const router = Router();
 
 // Public routes
-router.post('/register', register);
-router.post('/login', login);
+router.post('/register', validateRequest(registerSchema), register);
+router.post('/login', validateRequest(loginSchema), login);
 router.post('/refresh-token', refreshToken);
 
 // Protected routes (require authentication)

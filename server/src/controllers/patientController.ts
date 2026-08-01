@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Request, Response } from 'express';
 import { PatientModel } from '../models/Patient.js';
 import { AppError, asyncHandler } from '../middleware/errorHandler.js';

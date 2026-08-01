@@ -1,4 +1,3 @@
-// @ts-nocheck
 import express, { Express } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';

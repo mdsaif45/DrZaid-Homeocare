@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Response } from 'express';
 import { CaseRecordModel } from '../models/CaseRecord.js';
 import { VitalsModel } from '../models/Vitals.js';

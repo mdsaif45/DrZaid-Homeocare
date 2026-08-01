@@ -1,4 +1,3 @@
-// @ts-nocheck
 import pg from 'pg';
 import dotenv from 'dotenv';
 import { logger } from '../utils/logger.js';
@@ -20,10 +19,10 @@ const dbConfig = {
 };
 
 // Create connection pool
-export const pool = new Pool(dbConfig);
+export const pool = new pg.Pool(dbConfig);
 
 // Handle pool errors
-pool.on('error', (err) => {
+pool.on('error', (err: Error) => {
   logger.error('Unexpected error on idle database client', err);
   process.exit(-1);
 });
@@ -45,7 +44,7 @@ export const db = {
 
   // For transactions
   getClient: async () => {
-    const client = await pool.connect();
+    const client = await pool.connect() as pg.PoolClient & { lastQuery?: any };
     const originalQuery = client.query.bind(client);
     const originalRelease = client.release.bind(client);
 
@@ -55,9 +54,9 @@ export const db = {
     }, 5000);
 
     // Monkey patch the client to track queries
-    client.query = (...args: any[]) => {
+    client.query = (...args: any[]): any => {
       client.lastQuery = args;
-      return originalQuery(...args);
+      return (originalQuery as any)(...args);
     };
 
     client.release = () => {

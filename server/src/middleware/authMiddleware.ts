@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Response, NextFunction } from 'express';
 import { verifyAccessToken, extractTokenFromHeader } from '../utils/jwt.js';
 import { UserModel } from '../models/User.js';
