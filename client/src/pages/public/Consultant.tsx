@@ -44,7 +44,10 @@ export default function Consultant() {
         setScrolled(y > 20);
         // Ignore jitter, and never hide the nav near the top of the page.
         if (Math.abs(y - lastY.current) > 8) {
-          setHidden(y > lastY.current && y > 220);
+          const goingDown = y > lastY.current && y > 220;
+          setHidden(goingDown);
+          // A hidden header must not keep focusable links in the tab order.
+          if (goingDown) setMobileOpen(false);
           lastY.current = y;
         }
         frame = 0;
@@ -57,11 +60,6 @@ export default function Consultant() {
       if (frame) cancelAnimationFrame(frame);
     };
   }, []);
-
-  // A hidden header must not keep focusable links in the tab order.
-  useEffect(() => {
-    if (hidden) setMobileOpen(false);
-  }, [hidden]);
 
   const bookingHref = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
     "Hello Dr. Zaid, I'd like to book a homeopathic consultation.",
@@ -183,7 +181,7 @@ export default function Consultant() {
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-600" />
                   </span>
                   <span className="text-xs font-bold text-teal-700 uppercase tracking-widest">
-                    Accepting new patients · Slots within 48 hrs
+                    Now accepting new patients
                   </span>
                 </div>
 
@@ -208,8 +206,8 @@ export default function Consultant() {
                   className="hero-in text-lg md:text-xl text-slate-500 leading-relaxed mb-10 max-w-2xl"
                   style={{ ['--hero-delay' as string]: '280ms' }}
                 >
-                  I'm Dr. MD Zaid, BHMS — a consulting classical homeopath. Every patient gets a
-                  60&#8209;minute first consultation, a remedy matched to their whole constitution, and
+                  I'm Dr. MD Zaid, BHMS — a consulting classical homeopath. Every patient gets an
+                  unhurried first consultation, a remedy matched to their whole constitution, and
                   structured follow-up with progress tracked in writing. No templates, no guesswork.
                 </p>
 
@@ -244,11 +242,9 @@ export default function Consultant() {
                   className="hero-in flex flex-wrap gap-x-10 gap-y-6 pt-8 border-t border-slate-100"
                   style={{ ['--hero-delay' as string]: '480ms' }}
                 >
-                  {STATS.map(([val, label]) => (
+                  {PRACTICE_FACTS.map(([val, label]) => (
                     <div key={label}>
-                      <dd className="text-2xl font-extrabold text-slate-900 tabular-nums">
-                        <CountUp value={val} />
-                      </dd>
+                      <dd className="text-lg font-extrabold text-slate-900">{val}</dd>
                       <dt className="text-xs font-semibold text-slate-400 uppercase tracking-wide mt-0.5">{label}</dt>
                     </div>
                   ))}
@@ -275,12 +271,9 @@ export default function Consultant() {
                     ))}
                   </ul>
                   <div className="rounded-2xl bg-slate-50 border border-slate-100 p-5">
-                    <div className="flex items-baseline justify-between mb-1">
-                      <span className="text-sm font-semibold text-slate-500">First consultation</span>
-                      <span className="text-2xl font-extrabold text-slate-900">₹1,200</span>
-                    </div>
+                    <p className="text-sm font-semibold text-slate-700 mb-1">First consultation</p>
                     <p className="text-xs text-slate-400">
-                      60 minutes · online or in-clinic · includes written case summary
+                      Unhurried · online or in-clinic · includes a written case summary
                     </p>
                   </div>
                 </div>
@@ -310,18 +303,17 @@ export default function Consultant() {
               <Reveal>
                 <SectionEyebrow>About the consultant</SectionEyebrow>
                 <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-6 leading-tight">
-                  Twelve years of classical<br />homeopathic practice.
+                  Classical homeopathy,<br />practised carefully.
                 </h2>
                 <div className="space-y-4 text-slate-500 leading-relaxed">
                   <p>
-                    I trained in classical homeopathy and have spent the last twelve years in
-                    full-time consulting practice, working mostly with people who arrive after
+                    I trained in classical homeopathy and work mostly with people who arrive after
                     conventional treatment has plateaued — long-standing skin conditions, recurring
                     respiratory illness, anxiety that hasn't responded to the usual routes.
                   </p>
                   <p>
-                    My practice is deliberately unhurried. A first consultation runs a full hour
-                    because a constitutional prescription depends on detail that a fifteen-minute
+                    My practice is deliberately unhurried. A first consultation takes as long as the
+                    case needs, because a constitutional prescription depends on detail that a brief
                     appointment simply cannot surface. I keep structured written records for every
                     patient, which means follow-ups start from evidence rather than recollection.
                   </p>
@@ -355,7 +347,7 @@ export default function Consultant() {
             <Reveal className="text-center max-w-2xl mx-auto mb-16">
               <SectionEyebrow center>Consultation formats</SectionEyebrow>
               <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-5 leading-tight">
-                Transparent formats, transparent fees
+                Ways we can work together
               </h2>
               <p className="text-lg text-slate-500 leading-relaxed">
                 No packages you have to commit to up front. Book what you need, when you need it.
@@ -367,8 +359,8 @@ export default function Consultant() {
             </Reveal>
 
             <p className="text-center text-sm text-slate-400 mt-10 max-w-2xl mx-auto">
-              Remedies are dispensed separately and typically cost ₹150–₹400 per month. Fees are
-              indicative — confirmed when your appointment is scheduled.
+              Consultation charges and remedy costs are confirmed when your appointment is
+              scheduled — just ask when you get in touch.
             </p>
           </div>
         </section>
@@ -578,15 +570,20 @@ export default function Consultant() {
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
-const STATS: ReadonlyArray<readonly [string, string]> = [
-  ['12 yrs', 'In practice'],
-  ['5,000+', 'Cases taken'],
-  ['60 min', 'First consultation'],
-  ['48 hrs', 'Typical wait'],
+/**
+ * Deliberately qualitative. No years-in-practice or patient counts: unverifiable
+ * volume claims on a medical page are a liability, and the practice's standing
+ * rests on how a case is taken rather than on a tally.
+ */
+const PRACTICE_FACTS: ReadonlyArray<readonly [string, string]> = [
+  ['BHMS', 'Qualified homeopath'],
+  ['Classical', 'Constitutional method'],
+  ['Online & in-clinic', 'Consultation formats'],
+  ['Written records', 'Every consultation'],
 ];
 
 const FIRST_CONSULT_INCLUDES = [
-  'A full hour, unhurried — medical history, family patterns, lifestyle and mental-emotional picture',
+  'An unhurried session — medical history, family patterns, lifestyle and mental-emotional picture',
   'Review of any existing reports or investigations you bring',
   'A constitutional remedy selected for you, with dosage explained in plain language',
   'A written case summary and a clear follow-up date before you leave',
@@ -601,17 +598,20 @@ const TRUST_ITEMS = [
 ];
 
 const CREDENTIALS = [
-  { icon: '🎓', title: 'BHMS, classical training', desc: 'Bachelor of Homeopathic Medicine & Surgery, with post-graduate study in classical repertory method.' },
+  { icon: '🎓', title: 'BHMS, classical training', desc: 'Bachelor of Homeopathic Medicine & Surgery, practising the classical repertory method.' },
   { icon: '🗂️', title: 'Documented practice', desc: 'Every consultation recorded in a structured EMR, so follow-ups build on evidence, not memory.' },
   { icon: '🌐', title: 'Online & in-clinic', desc: 'Video consultation for patients outside the city, with remedies couriered where permitted.' },
   { icon: '🧭', title: 'Clear about scope', desc: 'Referral onward when a case needs conventional investigation, imaging, or urgent care.' },
 ];
 
+/**
+ * Formats only — no fees. Consultation charges are quoted when an appointment
+ * is scheduled, so nothing here can go stale or read as a fixed price list.
+ */
 const CONSULT_TIERS = [
   {
     name: 'First consultation',
-    price: '₹1,200',
-    duration: '60 minutes',
+    duration: 'Longest session',
     desc: 'The full case-taking session for new patients.',
     features: [
       'Complete history & constitutional analysis',
@@ -623,8 +623,7 @@ const CONSULT_TIERS = [
   },
   {
     name: 'Follow-up',
-    price: '₹600',
-    duration: '25 minutes',
+    duration: 'Scheduled review',
     desc: 'Scheduled review to assess response and adjust.',
     features: [
       'Progress assessment against baseline',
@@ -636,8 +635,7 @@ const CONSULT_TIERS = [
   },
   {
     name: 'Acute consultation',
-    price: '₹400',
-    duration: '15 minutes',
+    duration: 'Short notice',
     desc: 'Short-notice help for an acute episode.',
     features: [
       'Same-day slots where available',
@@ -660,15 +658,19 @@ const CONDITIONS = [
 
 const PROCESS_STEPS = [
   { title: 'Enquiry & scheduling', when: 'Day 0', desc: "Message me on WhatsApp or email with a one-line summary. I'll confirm a slot and send a short intake form so no time is lost in the session itself." },
-  { title: 'The first consultation', when: '60 min', desc: 'A full hour of case-taking, online or in clinic. You leave with a prescription, dosage instructions in writing, and a scheduled review date.' },
+  { title: 'The first consultation', when: 'Unhurried', desc: 'A thorough case-taking session, online or in clinic. You leave with a prescription, dosage instructions in writing, and a scheduled review date.' },
   { title: 'Structured follow-up', when: 'Weeks 4, 8, 12', desc: "Reviews at set intervals to compare against your baseline. Where a remedy isn't acting, we change course deliberately rather than waiting and hoping." },
   { title: 'Maintenance & discharge', when: 'Ongoing', desc: "Once the picture is stable, we taper contact to as-needed and I give you lifestyle and preventive guidance to hold the ground you've gained." },
 ];
 
+/**
+ * Roles name the condition only. Any "under care for N years" framing would
+ * imply a practice history the page should not be claiming.
+ */
 const TESTIMONIALS = [
-  { name: 'Priya S.', role: 'Psoriasis · 3 years under care', quote: "After six years of treatments that plateaued, I saw visible improvement within eight weeks. What struck me first was simply being asked questions nobody had asked before.", stars: 5 },
-  { name: 'Ahmed K.', role: 'Anxiety & IBS · 2 years', quote: "Dr. Zaid connected my digestive symptoms and my anxiety as one picture, which no one else had done. The follow-up structure kept me honest about my own progress.", stars: 5 },
-  { name: 'Fatima R.', role: 'Paediatric care', quote: "My son's recurring throat infections stopped after about four months. The online consultations were straightforward and he was comfortable throughout.", stars: 5 },
+  { name: 'Priya S.', role: 'Psoriasis', quote: "After years of treatments that plateaued, I saw visible improvement. What struck me first was simply being asked questions nobody had asked before.", stars: 5 },
+  { name: 'Ahmed K.', role: 'Anxiety & IBS', quote: "Dr. Zaid connected my digestive symptoms and my anxiety as one picture, which no one else had done. The follow-up structure kept me honest about my own progress.", stars: 5 },
+  { name: 'Fatima R.', role: 'Paediatric care', quote: "My son's recurring throat infections stopped after a few months of treatment. The online consultations were straightforward and he was comfortable throughout.", stars: 5 },
 ];
 
 const FAQS = [
@@ -677,7 +679,7 @@ const FAQS = [
   { q: 'Is an online consultation as good as being in the clinic?', a: 'For most chronic cases, yes — case-taking is largely conversation, and video works well. Where a physical examination genuinely matters, I will say so and we arrange an in-clinic visit or a referral.' },
   { q: 'What do I need to bring or prepare?', a: 'Any recent investigation reports, a list of current medication with doses, and a rough timeline of when your symptoms began and what makes them better or worse. The intake form I send covers the rest.' },
   { q: 'Do you treat emergencies?', a: 'No. Homeopathy is not appropriate for medical emergencies. For chest pain, breathing difficulty, severe bleeding, sudden weakness, or any acute deterioration, go to a hospital immediately.' },
-  { q: 'What are the fees, and are remedies included?', a: 'Consultation fees are listed above. Remedies are dispensed separately and generally run ₹150–₹400 per month. There are no mandatory packages — you book each consultation as you need it.' },
+  { q: 'What are the fees, and are remedies included?', a: 'Consultation charges are confirmed when you book, and remedies are dispensed separately — message me and I will tell you exactly what a consultation and a month of remedies will cost before you commit to anything. There are no mandatory packages; you book each consultation as you need it.' },
 ];
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -708,8 +710,10 @@ function ProcessStep({
         <div className="w-11 h-11 rounded-xl bg-teal-600 flex items-center justify-center text-white font-extrabold text-sm shadow-lg shadow-teal-600/25 shrink-0 z-10">
           {String(index + 1).padStart(2, '0')}
         </div>
+        {/* The track itself is always visible; the teal fill is decorative, so
+            if its reveal never fires the timeline still reads correctly. */}
         {!isLast && (
-          <div className="w-px flex-1 my-1 bg-teal-100 relative overflow-hidden">
+          <div className="w-px flex-1 my-1 bg-teal-200 relative overflow-hidden">
             {/* scaleY rather than height: transform stays off the layout path. */}
             <span
               className={`absolute inset-0 bg-teal-500 origin-top transition-transform duration-700 ease-out motion-reduce:transition-none ${
@@ -733,50 +737,6 @@ function ProcessStep({
   );
 }
 
-/**
- * Counts a stat up to its final value once scrolled into view.
- *
- * Takes the display string (e.g. "5,000+", "12 yrs") and animates only the
- * numeric part, preserving any prefix/suffix. The final rendered text is always
- * exactly the input string, so nothing depends on the animation completing.
- */
-function CountUp({ value, duration = 1100 }: { value: string; duration?: number }) {
-  const { ref, revealed } = useReveal<HTMLSpanElement>({ threshold: 0.4 });
-  const [display, setDisplay] = useState<string | null>(null);
-
-  const match = value.match(/^(\D*)([\d,]+)(.*)$/);
-  const target = match ? Number(match[2].replace(/,/g, '')) : NaN;
-
-  useEffect(() => {
-    if (!revealed || !match || Number.isNaN(target)) return;
-
-    // Honour the OS reduced-motion setting: jump straight to the value.
-    const reduced =
-      typeof window !== 'undefined' &&
-      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    if (reduced) return;
-
-    let frame = 0;
-    let start: number | null = null;
-
-    const tick = (now: number) => {
-      start ??= now;
-      const t = Math.min((now - start) / duration, 1);
-      // Ease-out cubic: fast start, gentle settle.
-      const eased = 1 - Math.pow(1 - t, 3);
-      const current = Math.round(target * eased);
-      setDisplay(`${match[1]}${current.toLocaleString('en-IN')}${match[3]}`);
-      if (t < 1) frame = requestAnimationFrame(tick);
-      else setDisplay(null); // hand back to the exact source string
-    };
-
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [revealed, target, duration, value]);
-
-  return <span ref={ref}>{display ?? value}</span>;
-}
-
 function SectionEyebrow({ children, center, dark }: { children: React.ReactNode; center?: boolean; dark?: boolean }) {
   return (
     <span
@@ -792,9 +752,9 @@ function SectionEyebrow({ children, center, dark }: { children: React.ReactNode;
 }
 
 function TierCard({
-  name, price, duration, desc, features, featured, bookingHref,
+  name, duration, desc, features, featured, bookingHref,
 }: {
-  name: string; price: string; duration: string; desc: string;
+  name: string; duration: string; desc: string;
   features: string[]; featured: boolean; bookingHref: string;
 }) {
   return (
@@ -813,10 +773,9 @@ function TierCard({
       <h3 className={`text-base font-extrabold mb-1 ${featured ? 'text-white' : 'text-slate-900'}`}>{name}</h3>
       <p className={`text-sm mb-5 ${featured ? 'text-slate-400' : 'text-slate-500'}`}>{desc}</p>
 
-      <div className="flex items-baseline gap-2 mb-1">
-        <span className={`text-3xl font-extrabold ${featured ? 'text-white' : 'text-slate-900'}`}>{price}</span>
-      </div>
-      <p className={`text-xs font-semibold mb-6 ${featured ? 'text-teal-400' : 'text-teal-600'}`}>{duration}</p>
+      <p className={`text-xs font-bold uppercase tracking-widest mb-6 ${featured ? 'text-teal-400' : 'text-teal-600'}`}>
+        {duration}
+      </p>
 
       <ul className="space-y-3 mb-7">
         {features.map(f => (

@@ -20,15 +20,20 @@ export function useReveal<T extends HTMLElement = HTMLDivElement>(
   const rootMargin = options.rootMargin ?? '0px 0px -80px 0px';
 
   const ref = useRef<T | null>(null);
-  const [revealed, setRevealed] = useState(false);
+
+  // Whether scroll-reveal is possible at all is knowable at first render, so it
+  // is resolved in the initial state rather than by an effect that would have to
+  // immediately re-render. Without IntersectionObserver, start already revealed.
+  const canObserve = typeof IntersectionObserver !== 'undefined';
+  const [revealed, setRevealed] = useState(!canObserve);
   // When true, the element is shown with no transition at all. A transition
   // started in a background tab never advances, leaving content frozen at
   // opacity 0 — so the fallback path skips animation rather than starting one
   // the browser will not finish.
-  const [instant, setInstant] = useState(false);
+  const [instant, setInstant] = useState(!canObserve);
 
   useEffect(() => {
-    if (revealed) return;
+    if (revealed || !canObserve) return;
     const el = ref.current;
     if (!el) return;
 
@@ -39,12 +44,6 @@ export function useReveal<T extends HTMLElement = HTMLDivElement>(
       setInstant(true);
       setRevealed(true);
     }, 2500);
-
-    if (typeof IntersectionObserver === 'undefined') {
-      setInstant(true);
-      setRevealed(true);
-      return () => clearTimeout(failsafe);
-    }
 
     const observer = new IntersectionObserver(
       entries => {
@@ -64,7 +63,7 @@ export function useReveal<T extends HTMLElement = HTMLDivElement>(
       clearTimeout(failsafe);
       observer.disconnect();
     };
-  }, [threshold, rootMargin, revealed]);
+  }, [threshold, rootMargin, revealed, canObserve]);
 
   return { ref, revealed, instant };
 }

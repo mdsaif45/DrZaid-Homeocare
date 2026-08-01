@@ -73,55 +73,73 @@ html {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  /* Hidden state is scoped to the un-revealed selector, so "revealed" is the
-     plain default rather than a transition endpoint. See the note on
-     .stagger below — this keeps content visible if the transition is skipped. */
+  /* Reveal is driven by an ANIMATION, not a transition, and every hidden
+     element runs it unconditionally on load with a hard time limit.
+     Correctness therefore never depends on JavaScript: Chrome throttles both
+     IntersectionObserver and timers in background tabs, so a JS-gated reveal
+     can leave content stuck at opacity 0 indefinitely. Here the worst case is
+     that content simply appears without being scrolled to.
+
+     `data-revealed="true"` (set by useReveal when the element scrolls into
+     view) short-circuits the wait so the reveal lands at the right moment;
+     it is an enhancement over the CSS floor, not a prerequisite. */
   .reveal:not([data-revealed='true']) {
-    opacity: 0;
-    transform: translate3d(0, 24px, 0);
+    animation: reveal-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) 2.4s both;
     will-change: transform, opacity;
   }
 
-  .reveal {
-    transition:
-      opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-      transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-    transition-delay: var(--reveal-delay, 0ms);
+  .reveal[data-revealed='true'] {
+    animation: reveal-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--reveal-delay, 0ms);
   }
 
-  /* Fallback reveal (see useReveal): show immediately, animate nothing. */
+  @keyframes reveal-in {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 24px, 0);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* Instant path (see useReveal): show with no animation at all. */
   .reveal[data-instant],
   .stagger[data-instant] > * {
-    transition: none !important;
-    transition-delay: 0ms !important;
+    animation: none !important;
     opacity: 1 !important;
     transform: none !important;
   }
 
-  /* Children cascade in sequence once the container reveals.
-
-     Only children of a not-yet-revealed container start hidden. Scoping the
-     hidden state this way means the revealed state is a plain declaration
-     rather than something reachable only by running a transition — if the
-     browser skips the transition entirely (as it does in a background tab),
-     the content still ends up visible instead of stuck at opacity 0. */
+  /* Children cascade in sequence. Same contract as .reveal above: the animation
+     runs unconditionally so content cannot stay hidden, and data-revealed only
+     replaces the fallback delay with the staggered one. */
   .stagger:not([data-revealed='true']) > * {
-    opacity: 0;
-    transform: translate3d(0, 20px, 0);
+    animation: stagger-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) 2.4s both;
   }
 
-  .stagger > * {
-    transition:
-      opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-      transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  .stagger[data-revealed='true'] > * {
+    animation: stagger-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
-  .stagger[data-revealed='true'] > *:nth-child(1) { transition-delay: 60ms; }
-  .stagger[data-revealed='true'] > *:nth-child(2) { transition-delay: 130ms; }
-  .stagger[data-revealed='true'] > *:nth-child(3) { transition-delay: 200ms; }
-  .stagger[data-revealed='true'] > *:nth-child(4) { transition-delay: 270ms; }
-  .stagger[data-revealed='true'] > *:nth-child(5) { transition-delay: 340ms; }
-  .stagger[data-revealed='true'] > *:nth-child(6) { transition-delay: 410ms; }
+  @keyframes stagger-in {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 20px, 0);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .stagger[data-revealed='true'] > *:nth-child(1) { animation-delay: 60ms; }
+  .stagger[data-revealed='true'] > *:nth-child(2) { animation-delay: 130ms; }
+  .stagger[data-revealed='true'] > *:nth-child(3) { animation-delay: 200ms; }
+  .stagger[data-revealed='true'] > *:nth-child(4) { animation-delay: 270ms; }
+  .stagger[data-revealed='true'] > *:nth-child(5) { animation-delay: 340ms; }
+  .stagger[data-revealed='true'] > *:nth-child(6) { animation-delay: 410ms; }
 
   /* Hero entrance — plays on load, so it is a keyframe rather than a reveal. */
   .hero-in {
