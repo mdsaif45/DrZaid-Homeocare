@@ -6,10 +6,6 @@ import { logger } from '../utils/logger.js';
 
 const patientService = new PatientService();
 
-/**
- * Get all patients with pagination and search
- * GET /api/patients?page=1&limit=20&search=keyword
- */
 export const getPatients = asyncHandler(async (req: Request, res: Response) => {
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 20;
@@ -31,12 +27,8 @@ export const getPatients = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
-/**
- * Get patient by ID
- * GET /api/patients/:id
- */
 export const getPatientById = asyncHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
 
   const patient = await patientService.getPatientById(parseInt(id));
 
@@ -50,10 +42,6 @@ export const getPatientById = asyncHandler(async (req: Request, res: Response) =
   });
 });
 
-/**
- * Create new patient
- * POST /api/patients
- */
 export const createPatient = asyncHandler(async (req: AuthRequest, res: Response) => {
   const patientData: CreatePatientRequest = req.body;
 
@@ -68,12 +56,8 @@ export const createPatient = asyncHandler(async (req: AuthRequest, res: Response
   });
 });
 
-/**
- * Update patient
- * PUT /api/patients/:id
- */
 export const updatePatient = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
   const updates: Partial<CreatePatientRequest> = req.body;
 
   const patient = await patientService.updatePatient(parseInt(id), updates);
@@ -87,12 +71,8 @@ export const updatePatient = asyncHandler(async (req: AuthRequest, res: Response
   });
 });
 
-/**
- * Delete patient
- * DELETE /api/patients/:id
- */
 export const deletePatient = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
 
   await patientService.deletePatient(parseInt(id));
 
@@ -104,10 +84,6 @@ export const deletePatient = asyncHandler(async (req: AuthRequest, res: Response
   });
 });
 
-/**
- * Get patient statistics
- * GET /api/patients/stats
- */
 export const getPatientStats = asyncHandler(async (req: Request, res: Response) => {
   const stats = await patientService.getStats();
 
@@ -117,10 +93,6 @@ export const getPatientStats = asyncHandler(async (req: Request, res: Response) 
   });
 });
 
-/**
- * Search patients by criteria
- * POST /api/patients/search
- */
 export const searchPatients = asyncHandler(async (req: Request, res: Response) => {
   const criteria = req.body;
 
@@ -132,10 +104,6 @@ export const searchPatients = asyncHandler(async (req: Request, res: Response) =
   });
 });
 
-/**
- * Get recent patients
- * GET /api/patients/recent
- */
 export const getRecentPatients = asyncHandler(async (req: Request, res: Response) => {
   const limit = parseInt(req.query.limit as string) || 10;
 
@@ -147,12 +115,8 @@ export const getRecentPatients = asyncHandler(async (req: Request, res: Response
   });
 });
 
-/**
- * Get patient by case ID
- * GET /api/patients/case/:caseId
- */
 export const getPatientByCaseId = asyncHandler(async (req: Request, res: Response) => {
-  const { caseId } = req.params;
+  const caseId = String(req.params.caseId);
 
   const patient = await patientService.getPatientByCaseId(caseId);
 

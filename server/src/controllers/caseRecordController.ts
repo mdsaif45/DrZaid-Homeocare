@@ -7,13 +7,8 @@ import { asyncHandler, AppError } from '../middleware/errorHandler.js';
 
 const caseRecordService = new CaseRecordService();
 
-/**
- * @desc    Get all case records for a patient
- * @route   GET /api/case-records/patient/:patientId
- * @access  Private
- */
 export const getCaseRecordsByPatient = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { patientId } = req.params;
+  const patientId = String(req.params.patientId);
   const caseRecords = await caseRecordService.getCaseRecordsByPatient(parseInt(patientId));
 
   res.json({
@@ -22,13 +17,8 @@ export const getCaseRecordsByPatient = asyncHandler(async (req: AuthRequest, res
   });
 });
 
-/**
- * @desc    Get single case record with details (vitals, investigations)
- * @route   GET /api/case-records/:id
- * @access  Private
- */
 export const getCaseRecordById = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
   const caseRecord = await caseRecordService.getCaseRecordById(parseInt(id));
 
   if (!caseRecord) {
@@ -41,11 +31,6 @@ export const getCaseRecordById = asyncHandler(async (req: AuthRequest, res: Resp
   });
 });
 
-/**
- * @desc    Create new case record
- * @route   POST /api/case-records
- * @access  Private
- */
 export const createCaseRecord = asyncHandler(async (req: AuthRequest, res: Response) => {
   const data: CreateCaseRecordRequest = req.body;
   const userId = req.user!.id;
@@ -59,13 +44,8 @@ export const createCaseRecord = asyncHandler(async (req: AuthRequest, res: Respo
   });
 });
 
-/**
- * @desc    Update case record
- * @route   PUT /api/case-records/:id
- * @access  Private
- */
 export const updateCaseRecord = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
   const data: Partial<CreateCaseRecordRequest> = req.body;
 
   const caseRecord = await caseRecordService.updateCaseRecord(parseInt(id), data);
@@ -77,13 +57,8 @@ export const updateCaseRecord = asyncHandler(async (req: AuthRequest, res: Respo
   });
 });
 
-/**
- * @desc    Delete case record
- * @route   DELETE /api/case-records/:id
- * @access  Private
- */
 export const deleteCaseRecord = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
   await caseRecordService.deleteCaseRecord(parseInt(id));
 
   res.json({
@@ -92,11 +67,6 @@ export const deleteCaseRecord = asyncHandler(async (req: AuthRequest, res: Respo
   });
 });
 
-/**
- * @desc    Search case records by complaint tags
- * @route   POST /api/case-records/search
- * @access  Private
- */
 export const searchCaseRecordsByTags = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { tags } = req.body;
 
@@ -112,11 +82,6 @@ export const searchCaseRecordsByTags = asyncHandler(async (req: AuthRequest, res
   });
 });
 
-/**
- * @desc    Get recent case records
- * @route   GET /api/case-records/recent
- * @access  Private
- */
 export const getRecentCaseRecords = asyncHandler(async (req: AuthRequest, res: Response) => {
   const limit = parseInt(req.query.limit as string) || 10;
   const caseRecords = await caseRecordService.getRecent(limit);
@@ -127,15 +92,8 @@ export const getRecentCaseRecords = asyncHandler(async (req: AuthRequest, res: R
   });
 });
 
-// ============= VITALS CONTROLLERS =============
-
-/**
- * @desc    Get vitals for a case record
- * @route   GET /api/case-records/:caseRecordId/vitals
- * @access  Private
- */
 export const getVitalsByCaseRecord = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { caseRecordId } = req.params;
+  const caseRecordId = String(req.params.caseRecordId);
   const vitals = await VitalsModel.findByCaseRecordId(parseInt(caseRecordId));
 
   res.json({
@@ -144,13 +102,8 @@ export const getVitalsByCaseRecord = asyncHandler(async (req: AuthRequest, res: 
   });
 });
 
-/**
- * @desc    Create vitals record
- * @route   POST /api/case-records/:caseRecordId/vitals
- * @access  Private
- */
 export const createVitals = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { caseRecordId } = req.params;
+  const caseRecordId = String(req.params.caseRecordId);
   const data: CreateVitalsRequest = {
     ...req.body,
     case_record_id: parseInt(caseRecordId),
@@ -165,13 +118,8 @@ export const createVitals = asyncHandler(async (req: AuthRequest, res: Response)
   });
 });
 
-/**
- * @desc    Update vitals record
- * @route   PUT /api/vitals/:id
- * @access  Private
- */
 export const updateVitals = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
   const data: Partial<CreateVitalsRequest> = req.body;
 
   const vitals = await VitalsModel.update(parseInt(id), data);
@@ -183,13 +131,8 @@ export const updateVitals = asyncHandler(async (req: AuthRequest, res: Response)
   });
 });
 
-/**
- * @desc    Delete vitals record
- * @route   DELETE /api/vitals/:id
- * @access  Private
- */
 export const deleteVitals = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
   await VitalsModel.delete(parseInt(id));
 
   res.json({
@@ -198,15 +141,8 @@ export const deleteVitals = asyncHandler(async (req: AuthRequest, res: Response)
   });
 });
 
-// ============= INVESTIGATIONS CONTROLLERS =============
-
-/**
- * @desc    Get investigations for a case record
- * @route   GET /api/case-records/:caseRecordId/investigations
- * @access  Private
- */
 export const getInvestigationsByCaseRecord = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { caseRecordId } = req.params;
+  const caseRecordId = String(req.params.caseRecordId);
   const investigations = await InvestigationModel.findByCaseRecordId(parseInt(caseRecordId));
 
   res.json({
@@ -215,13 +151,8 @@ export const getInvestigationsByCaseRecord = asyncHandler(async (req: AuthReques
   });
 });
 
-/**
- * @desc    Create investigation record (without file)
- * @route   POST /api/case-records/:caseRecordId/investigations
- * @access  Private
- */
 export const createInvestigation = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { caseRecordId } = req.params;
+  const caseRecordId = String(req.params.caseRecordId);
   const data: CreateInvestigationRequest = {
     ...req.body,
     case_record_id: parseInt(caseRecordId),
@@ -236,13 +167,8 @@ export const createInvestigation = asyncHandler(async (req: AuthRequest, res: Re
   });
 });
 
-/**
- * @desc    Update investigation record
- * @route   PUT /api/investigations/:id
- * @access  Private
- */
 export const updateInvestigation = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
   const data: Partial<CreateInvestigationRequest> = req.body;
 
   const investigation = await InvestigationModel.update(parseInt(id), data);
@@ -254,13 +180,8 @@ export const updateInvestigation = asyncHandler(async (req: AuthRequest, res: Re
   });
 });
 
-/**
- * @desc    Delete investigation record
- * @route   DELETE /api/investigations/:id
- * @access  Private
- */
 export const deleteInvestigation = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
   await InvestigationModel.delete(parseInt(id));
 
   res.json({

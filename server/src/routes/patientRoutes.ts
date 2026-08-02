@@ -14,7 +14,7 @@ import { protect } from '../middleware/authMiddleware.js';
 import { validateRequest } from '../middleware/validate.js';
 import { createPatientSchema, updatePatientSchema } from '../schemas/index.js';
 
-const router = Router();
+const router: Router = Router();
 
 // All patient routes require authentication
 router.use(protect);

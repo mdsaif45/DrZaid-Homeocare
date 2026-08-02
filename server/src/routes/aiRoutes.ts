@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { matchRepertory } from '../controllers/aiController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
-const router = Router();
+const router: Router = Router();
 
 router.use(protect);
 

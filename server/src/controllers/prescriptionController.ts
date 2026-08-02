@@ -5,13 +5,8 @@ import { asyncHandler, AppError } from '../middleware/errorHandler.js';
 
 const prescriptionService = new PrescriptionService();
 
-/**
- * @desc    Get all prescriptions for a patient
- * @route   GET /api/prescriptions/patient/:patientId
- * @access  Private
- */
 export const getPrescriptionsByPatient = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { patientId } = req.params;
+  const patientId = String(req.params.patientId);
   const prescriptions = await prescriptionService.getPrescriptionsByPatient(parseInt(patientId));
 
   res.json({
@@ -20,13 +15,8 @@ export const getPrescriptionsByPatient = asyncHandler(async (req: AuthRequest, r
   });
 });
 
-/**
- * @desc    Get prescriptions for a case record
- * @route   GET /api/prescriptions/case-record/:caseRecordId
- * @access  Private
- */
 export const getPrescriptionsByCaseRecord = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { caseRecordId } = req.params;
+  const caseRecordId = String(req.params.caseRecordId);
   const prescriptions = await prescriptionService.getPrescriptionsByCaseRecord(parseInt(caseRecordId));
 
   res.json({
@@ -35,13 +25,8 @@ export const getPrescriptionsByCaseRecord = asyncHandler(async (req: AuthRequest
   });
 });
 
-/**
- * @desc    Get single prescription with details
- * @route   GET /api/prescriptions/:id
- * @access  Private
- */
 export const getPrescriptionById = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
   const prescription = await prescriptionService.getPrescriptionById(parseInt(id));
 
   if (!prescription) {
@@ -54,11 +39,6 @@ export const getPrescriptionById = asyncHandler(async (req: AuthRequest, res: Re
   });
 });
 
-/**
- * @desc    Create new prescription
- * @route   POST /api/prescriptions
- * @access  Private
- */
 export const createPrescription = asyncHandler(async (req: AuthRequest, res: Response) => {
   const data: CreatePrescriptionRequest = req.body;
   const userId = req.user!.id;
@@ -72,13 +52,8 @@ export const createPrescription = asyncHandler(async (req: AuthRequest, res: Res
   });
 });
 
-/**
- * @desc    Update prescription
- * @route   PUT /api/prescriptions/:id
- * @access  Private
- */
 export const updatePrescription = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
   const data: Partial<CreatePrescriptionRequest> = req.body;
 
   const prescription = await prescriptionService.updatePrescription(parseInt(id), data);
@@ -90,13 +65,8 @@ export const updatePrescription = asyncHandler(async (req: AuthRequest, res: Res
   });
 });
 
-/**
- * @desc    Delete prescription
- * @route   DELETE /api/prescriptions/:id
- * @access  Private
- */
 export const deletePrescription = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
   await prescriptionService.deletePrescription(parseInt(id));
 
   res.json({
@@ -105,11 +75,6 @@ export const deletePrescription = asyncHandler(async (req: AuthRequest, res: Res
   });
 });
 
-/**
- * @desc    Search prescriptions by remedy name
- * @route   GET /api/prescriptions/search?remedy=name
- * @access  Private
- */
 export const searchPrescriptions = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { remedy } = req.query;
 
@@ -125,11 +90,6 @@ export const searchPrescriptions = asyncHandler(async (req: AuthRequest, res: Re
   });
 });
 
-/**
- * @desc    Get recent prescriptions
- * @route   GET /api/prescriptions/recent
- * @access  Private
- */
 export const getRecentPrescriptions = asyncHandler(async (req: AuthRequest, res: Response) => {
   const limit = parseInt(req.query.limit as string) || 10;
   const prescriptions = await prescriptionService.getRecent(limit);
@@ -140,11 +100,6 @@ export const getRecentPrescriptions = asyncHandler(async (req: AuthRequest, res:
   });
 });
 
-/**
- * @desc    Get upcoming follow-ups
- * @route   GET /api/prescriptions/follow-ups
- * @access  Private
- */
 export const getUpcomingFollowUps = asyncHandler(async (req: AuthRequest, res: Response) => {
   const days = parseInt(req.query.days as string) || 7;
   const prescriptions = await prescriptionService.getUpcomingFollowUps(days);
@@ -155,11 +110,6 @@ export const getUpcomingFollowUps = asyncHandler(async (req: AuthRequest, res: R
   });
 });
 
-/**
- * @desc    Get prescription statistics
- * @route   GET /api/prescriptions/stats
- * @access  Private
- */
 export const getPrescriptionStats = asyncHandler(async (req: AuthRequest, res: Response) => {
   const stats = await prescriptionService.getStats();
 

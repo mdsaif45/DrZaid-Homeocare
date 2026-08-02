@@ -11,7 +11,7 @@ import { protect } from '../middleware/authMiddleware.js';
 import { validateRequest } from '../middleware/validate.js';
 import { loginSchema, registerSchema } from '../schemas/index.js';
 
-const router = Router();
+const router: Router = Router();
 
 // Public routes
 router.post('/register', validateRequest(registerSchema), register);
