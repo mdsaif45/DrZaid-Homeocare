@@ -1,7 +1,13 @@
+import { envConfig } from '../config/env.js';
 import { IPatientRepository } from './interfaces/IPatientRepository.js';
 import { ICaseRecordRepository } from './interfaces/ICaseRecordRepository.js';
 import { IPrescriptionRepository } from './interfaces/IPrescriptionRepository.js';
 import { IUserRepository } from './interfaces/IUserRepository.js';
+
+import { SqlitePatientRepository } from './sqlite/SqlitePatientRepository.js';
+import { SqliteCaseRecordRepository } from './sqlite/SqliteCaseRecordRepository.js';
+import { SqlitePrescriptionRepository } from './sqlite/SqlitePrescriptionRepository.js';
+import { SqliteUserRepository } from './sqlite/SqliteUserRepository.js';
 
 import { DrizzlePatientRepository } from './drizzle/DrizzlePatientRepository.js';
 import { DrizzleCaseRecordRepository } from './drizzle/DrizzleCaseRecordRepository.js';
@@ -16,28 +22,64 @@ export class RepositoryFactory {
 
   public static getPatientRepository(): IPatientRepository {
     if (!this.patientRepo) {
-      this.patientRepo = new DrizzlePatientRepository();
+      switch (envConfig.dbProvider) {
+        case 'postgres':
+        case 'drizzle':
+          this.patientRepo = new DrizzlePatientRepository();
+          break;
+        case 'sqlite':
+        default:
+          this.patientRepo = new SqlitePatientRepository();
+          break;
+      }
     }
     return this.patientRepo;
   }
 
   public static getCaseRecordRepository(): ICaseRecordRepository {
     if (!this.caseRecordRepo) {
-      this.caseRecordRepo = new DrizzleCaseRecordRepository();
+      switch (envConfig.dbProvider) {
+        case 'postgres':
+        case 'drizzle':
+          this.caseRecordRepo = new DrizzleCaseRecordRepository();
+          break;
+        case 'sqlite':
+        default:
+          this.caseRecordRepo = new SqliteCaseRecordRepository();
+          break;
+      }
     }
     return this.caseRecordRepo;
   }
 
   public static getPrescriptionRepository(): IPrescriptionRepository {
     if (!this.prescriptionRepo) {
-      this.prescriptionRepo = new DrizzlePrescriptionRepository();
+      switch (envConfig.dbProvider) {
+        case 'postgres':
+        case 'drizzle':
+          this.prescriptionRepo = new DrizzlePrescriptionRepository();
+          break;
+        case 'sqlite':
+        default:
+          this.prescriptionRepo = new SqlitePrescriptionRepository();
+          break;
+      }
     }
     return this.prescriptionRepo;
   }
 
   public static getUserRepository(): IUserRepository {
     if (!this.userRepo) {
-      this.userRepo = new DrizzleUserRepository();
+      switch (envConfig.dbProvider) {
+        case 'postgres':
+        case 'drizzle':
+          this.userRepo = new DrizzleUserRepository();
+          break;
+        case 'sqlite':
+        default:
+          this.userRepo = new SqliteUserRepository();
+          break;
+      }
     }
     return this.userRepo;
   }
