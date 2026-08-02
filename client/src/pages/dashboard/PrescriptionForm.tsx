@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { usePrescriptionStore } from '../../store/prescriptionStore';
 import { usePatientStore } from '../../store/patientStore';
 import { CreatePrescriptionData } from '../../services/prescriptionService';
 import { generatePrescriptionPdf } from '../../utils/pdfGenerator';
-import { Button } from '../../components/ui/Button';
+import { PageHeader, Button, Input, Select, Textarea, Card, CardHeader, CardTitle, CardContent, Alert } from '../../components/ui';
 import { FileText, ArrowLeft, Save } from 'lucide-react';
 
 export default function PrescriptionForm() {
@@ -20,6 +20,7 @@ export default function PrescriptionForm() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadedPrescriptionId, setLoadedPrescriptionId] = useState<number | null>(null);
 
   const [formData, setFormData] = useState<CreatePrescriptionData>({
     patient_id: parseInt(patientIdFromQuery || '0'),
@@ -40,23 +41,24 @@ export default function PrescriptionForm() {
       fetchPatientById(parseInt(patientIdFromQuery));
     }
     if (id) {
-      fetchPrescriptionById(parseInt(id)).then(() => {
-        if (currentPrescription) {
-          setFormData({
-            patient_id: currentPrescription.patient_id,
-            case_record_id: currentPrescription.case_record_id,
-            remedy_name: currentPrescription.remedy_name,
-            potency: currentPrescription.potency || '',
-            dosage: currentPrescription.dosage || '',
-            repetition: currentPrescription.repetition || '',
-            instructions: currentPrescription.instructions || '',
-            prescription_date: currentPrescription.prescription_date.split('T')[0],
-            follow_up_date: currentPrescription.follow_up_date?.split('T')[0] || '',
-          });
-        }
-      });
+      fetchPrescriptionById(parseInt(id));
     }
-  }, [id, patientIdFromQuery]);
+  }, [id, patientIdFromQuery, fetchPatientById, fetchPrescriptionById]);
+
+  if (currentPrescription && isEditMode && loadedPrescriptionId !== currentPrescription.id) {
+    setLoadedPrescriptionId(currentPrescription.id);
+    setFormData({
+      patient_id: currentPrescription.patient_id,
+      case_record_id: currentPrescription.case_record_id,
+      remedy_name: currentPrescription.remedy_name,
+      potency: currentPrescription.potency || '',
+      dosage: currentPrescription.dosage || '',
+      repetition: currentPrescription.repetition || '',
+      instructions: currentPrescription.instructions || '',
+      prescription_date: currentPrescription.prescription_date.split('T')[0],
+      follow_up_date: currentPrescription.follow_up_date?.split('T')[0] || '',
+    });
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -100,8 +102,13 @@ export default function PrescriptionForm() {
       } else {
         navigate(`/dashboard/patients/${formData.patient_id}`);
       }
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to save prescription');
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'response' in err) {
+        const responseError = err as { response?: { data?: { error?: string } } };
+        setError(responseError.response?.data?.error || 'Failed to save prescription');
+      } else {
+        setError('Failed to save prescription');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -110,147 +117,123 @@ export default function PrescriptionForm() {
   const commonPotencies = ['6C', '12C', '30C', '200C', '1M', '10M', '50M', 'CM'];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <PageHeader
+        title={isEditMode ? 'Edit Prescription' : 'New Prescription'}
+        subtitle={currentPatient ? `Patient: ${currentPatient.full_name} (${currentPatient.case_id})` : 'Fill in remedy details'}
+        backButton={
           <button
             onClick={() => navigate(-1)}
-            className="text-emerald-600 hover:text-emerald-700 mb-2 flex items-center text-sm font-medium"
+            className="inline-flex items-center gap-1 text-sm font-semibold text-text-muted hover:text-primary transition cursor-pointer"
           >
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Back
+            <ArrowLeft className="w-4 h-4" />
           </button>
-          <h1 className="text-3xl font-bold text-slate-900">
-            {isEditMode ? 'Edit Prescription' : 'New Prescription'}
-          </h1>
-          {currentPatient && (
-            <p className="text-slate-600 mt-1">
-              Patient: <span className="font-semibold text-slate-800">{currentPatient.full_name}</span> ({currentPatient.case_id})
-            </p>
-          )}
-        </div>
-
-        <Button type="button" variant="outline" onClick={handleDownloadPdf}>
-          <FileText className="mr-2 h-4 w-4 text-emerald-600" />
-          Download PDF
-        </Button>
-      </div>
+        }
+        actions={
+          <Button type="button" variant="outline" onClick={handleDownloadPdf}>
+            <FileText className="mr-2 h-4 w-4 text-primary" />
+            Download PDF
+          </Button>
+        }
+      />
 
       {error && (
-        <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-lg mb-6 text-sm">
+        <Alert variant="danger" onDismiss={() => setError(null)}>
           {error}
-        </div>
+        </Alert>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h2 className="text-xl font-semibold text-slate-900 mb-4">Prescription Details</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Remedy Name <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="remedy_name"
-                value={formData.remedy_name}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
-                placeholder="e.g., Arsenicum Album, Nux Vomica, Pulsatilla"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Potency</label>
-              <div className="flex gap-2">
-                <select
-                  name="potency"
-                  value={formData.potency}
+        <Card>
+          <CardHeader>
+            <CardTitle>Prescription Details</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <Input
+                  label="Remedy Name"
+                  name="remedy_name"
+                  value={formData.remedy_name}
                   onChange={handleChange}
-                  className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
-                >
-                  <option value="">Select potency</option>
-                  {commonPotencies.map((pot) => (
-                    <option key={pot} value={pot}>
-                      {pot}
-                    </option>
-                  ))}
-                  <option value="custom">Other...</option>
-                </select>
-                {formData.potency === 'custom' && (
-                  <input
-                    type="text"
-                    placeholder="Enter potency"
-                    onChange={(e) => setFormData((prev) => ({ ...prev, potency: e.target.value }))}
-                    className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
-                  />
-                )}
+                  required
+                  placeholder="e.g., Arsenicum Album, Nux Vomica, Pulsatilla"
+                />
               </div>
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Dosage</label>
-              <input
-                type="text"
+              <div>
+                <div className="flex gap-2 items-end">
+                  <Select
+                    label="Potency"
+                    name="potency"
+                    value={formData.potency}
+                    onChange={handleChange}
+                    className="flex-1"
+                  >
+                    <option value="">Select potency</option>
+                    {commonPotencies.map((pot) => (
+                      <option key={pot} value={pot}>
+                        {pot}
+                      </option>
+                    ))}
+                    <option value="custom">Other...</option>
+                  </Select>
+                  {formData.potency === 'custom' && (
+                    <Input
+                      placeholder="Enter potency"
+                      onChange={(e) => setFormData((prev) => ({ ...prev, potency: e.target.value }))}
+                      className="flex-1"
+                    />
+                  )}
+                </div>
+              </div>
+
+              <Input
+                label="Dosage"
                 name="dosage"
                 value={formData.dosage}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
                 placeholder="e.g., 4 pills, 3 drops"
               />
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Repetition</label>
-              <input
-                type="text"
+              <Input
+                label="Repetition"
                 name="repetition"
                 value={formData.repetition}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
                 placeholder="e.g., TDS, BD, Once daily"
               />
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Prescription Date <span className="text-rose-500">*</span>
-              </label>
-              <input
+              <Input
+                label="Prescription Date"
                 type="date"
                 name="prescription_date"
                 value={formData.prescription_date}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
               />
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Follow-up Date</label>
-              <input
+              <Input
+                label="Follow-up Date"
                 type="date"
                 name="follow_up_date"
                 value={formData.follow_up_date}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
               />
-            </div>
 
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-slate-700 mb-1">Instructions</label>
-              <textarea
-                name="instructions"
-                value={formData.instructions}
-                onChange={handleChange}
-                rows={4}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
-                placeholder="Additional instructions for the patient..."
-              />
+              <div className="md:col-span-2">
+                <Textarea
+                  label="Instructions"
+                  name="instructions"
+                  value={formData.instructions}
+                  onChange={handleChange}
+                  rows={4}
+                  placeholder="Additional instructions for the patient..."
+                />
+              </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         <div className="flex justify-end gap-4">
           <Button type="button" variant="outline" onClick={() => navigate(-1)}>

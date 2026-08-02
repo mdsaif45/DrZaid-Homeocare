@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { cn } from '../../utils/cn';
+import { cn } from '../../lib/cn';
 
-interface TabItem {
+export interface TabItem {
   id: string;
   label: string;
   icon?: React.ReactNode;
   content: React.ReactNode;
 }
 
-interface TabsProps {
+export interface TabsProps {
   tabs: TabItem[];
   defaultTabId?: string;
   className?: string;
@@ -21,7 +21,7 @@ export const Tabs: React.FC<TabsProps> = ({ tabs, defaultTabId, className }) => 
 
   return (
     <div className={cn('w-full', className)}>
-      <div className="flex border-b border-slate-200 space-x-2">
+      <div className="flex border-b border-border space-x-2">
         {tabs.map((tab) => {
           const isActive = tab.id === activeTab;
           return (
@@ -29,10 +29,10 @@ export const Tabs: React.FC<TabsProps> = ({ tabs, defaultTabId, className }) => 
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                'flex items-center space-x-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors',
+                'flex items-center space-x-2 border-b-2 px-4 py-2.5 text-sm font-medium cursor-pointer',
                 isActive
-                  ? 'border-emerald-600 text-emerald-600'
-                  : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'
+                  ? 'border-primary text-primary-text'
+                  : 'border-transparent text-text-muted hover:border-border-strong hover:text-text'
               )}
             >
               {tab.icon && <span>{tab.icon}</span>}

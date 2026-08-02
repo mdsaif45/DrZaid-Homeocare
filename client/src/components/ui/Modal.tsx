@@ -1,47 +1,109 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
-import { cn } from '../../utils/cn';
+import { cn } from '../../lib/cn';
+import { IconButton } from './IconButton';
 
-interface ModalProps {
+export interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  title?: string;
+  title?: React.ReactNode;
+  description?: string;
   children: React.ReactNode;
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   className?: string;
 }
 
-export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, className }) => {
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
-          />
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.95, opacity: 0 }}
-            className={cn('relative z-10 w-full max-w-lg rounded-xl border border-slate-200 bg-white p-6 shadow-xl', className)}
-          >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              {title && <h3 className="text-lg font-semibold text-slate-900">{title}</h3>}
-              <button
-                onClick={onClose}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
-              >
-                <X className="h-5 w-5" />
-              </button>
+export const Modal: React.FC<ModalProps> = ({
+  isOpen,
+  onClose,
+  title,
+  description,
+  children,
+  size = 'md',
+  className,
+}) => {
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      previousFocusRef.current = document.activeElement as HTMLElement;
+      document.body.style.overflow = 'hidden';
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          onClose();
+        }
+      };
+
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+        if (previousFocusRef.current) {
+          previousFocusRef.current.focus();
+        }
+      };
+    }
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  const sizes = {
+    sm: 'max-w-md',
+    md: 'max-w-lg',
+    lg: 'max-w-2xl',
+    xl: 'max-w-4xl',
+    full: 'max-w-[95vw]',
+  };
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto bg-overlay backdrop-blur-xs animate-in fade-in duration-200"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? 'modal-title' : undefined}
+        aria-describedby={description ? 'modal-description' : undefined}
+        className={cn(
+          'relative w-full rounded-xl bg-surface-raised text-text border border-border shadow-xl transition-[transform,opacity] duration-200 overflow-hidden',
+          sizes[size],
+          className
+        )}
+      >
+        {(title || description) && (
+          <div className="flex items-start justify-between p-6 border-b border-border">
+            <div className="flex flex-col gap-1 pr-6">
+              {title && (
+                <h2 id="modal-title" className="text-lg font-semibold text-text">
+                  {title}
+                </h2>
+              )}
+              {description && (
+                <p id="modal-description" className="text-sm text-text-muted">
+                  {description}
+                </p>
+              )}
             </div>
-            <div className="mt-4">{children}</div>
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+            <IconButton
+              icon={<X className="w-5 h-5" />}
+              aria-label="Close modal"
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+            />
+          </div>
+        )}
+
+        <div className="p-6">{children}</div>
+      </div>
+    </div>,
+    document.body
   );
 };

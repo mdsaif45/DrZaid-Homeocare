@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
-import { ThemeProvider } from './context/ThemeContext';
 import Home from './pages/public/Home';
 import Login from './pages/dashboard/Login';
 import Dashboard from './pages/dashboard/Dashboard';
@@ -21,91 +20,89 @@ function App() {
   }, [initialize]);
 
   return (
-    <ThemeProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
+    <BrowserRouter>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
 
-          {/* Protected Dashboard Routes — all share DashboardLayout */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <DashboardLayout><Dashboard /></DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/patients"
-            element={
-              <ProtectedRoute>
-                <DashboardLayout><PatientList /></DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/patients/new"
-            element={
-              <ProtectedRoute>
-                <DashboardLayout><PatientForm /></DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/patients/:id/edit"
-            element={
-              <ProtectedRoute>
-                <DashboardLayout><PatientForm /></DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/patients/:id"
-            element={
-              <ProtectedRoute>
-                <DashboardLayout><PatientDetail /></DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/case-records/new"
-            element={
-              <ProtectedRoute>
-                <DashboardLayout><CaseRecordForm /></DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/case-records/:id/edit"
-            element={
-              <ProtectedRoute>
-                <DashboardLayout><CaseRecordForm /></DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/prescriptions/new"
-            element={
-              <ProtectedRoute>
-                <DashboardLayout><PrescriptionForm /></DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/prescriptions/:id/edit"
-            element={
-              <ProtectedRoute>
-                <DashboardLayout><PrescriptionForm /></DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
+        {/* Protected Dashboard Routes — all share DashboardLayout */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout><Dashboard /></DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/patients"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout><PatientList /></DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/patients/new"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout><PatientForm /></DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/patients/:id/edit"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout><PatientForm /></DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/patients/:id"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout><PatientDetail /></DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/case-records/new"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout><CaseRecordForm /></DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/case-records/:id/edit"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout><CaseRecordForm /></DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/prescriptions/new"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout><PrescriptionForm /></DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/prescriptions/:id/edit"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout><PrescriptionForm /></DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </ThemeProvider>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

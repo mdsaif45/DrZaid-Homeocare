@@ -1,16 +1,15 @@
 import React, { forwardRef, useId } from 'react';
 import { cn } from '../../lib/cn';
 
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label?: React.ReactNode;
   hint?: string;
   error?: string;
   leftIcon?: React.ReactNode;
-  rightIcon?: React.ReactNode;
 }
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, hint, error, leftIcon, rightIcon, id, className, required, disabled, ...props }, ref) => {
+export const Select = forwardRef<HTMLSelectElement, SelectProps>(
+  ({ label, hint, error, leftIcon, id, className, required, disabled, children, ...props }, ref) => {
     const generatedId = useId();
     const inputId = id || generatedId;
     const hintId = `${inputId}-hint`;
@@ -36,7 +35,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             </div>
           )}
 
-          <input
+          <select
             ref={ref}
             id={inputId}
             required={required}
@@ -44,24 +43,18 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             aria-describedby={describedBy}
             aria-invalid={!!error}
             className={cn(
-              'w-full rounded-lg bg-surface text-text text-sm border transition-[box-shadow] shadow-sm',
-              'placeholder:text-text-disabled',
+              'w-full rounded-lg bg-surface text-text text-sm border transition-[box-shadow] shadow-sm cursor-pointer pr-8',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:border-primary',
               'disabled:bg-bg-subtle disabled:text-text-disabled disabled:cursor-not-allowed',
               error ? 'border-danger focus-visible:ring-danger' : 'border-border',
               leftIcon ? 'pl-9' : 'pl-3.5',
-              rightIcon ? 'pr-9' : 'pr-3.5',
               'py-2',
               className
             )}
             {...props}
-          />
-
-          {rightIcon && (
-            <div className="absolute right-3 inset-y-0 flex items-center text-text-muted">
-              {rightIcon}
-            </div>
-          )}
+          >
+            {children}
+          </select>
         </div>
 
         {error ? (
@@ -78,4 +71,4 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
   }
 );
 
-Input.displayName = 'Input';
+Select.displayName = 'Select';

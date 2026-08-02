@@ -3,15 +3,22 @@ import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card';
 import { Input } from '../ui/Input';
 
 interface PatientVitalsSectionProps {
-  formData: any;
+  formData: {
+    blood_pressure_systolic?: number;
+    blood_pressure_diastolic?: number;
+    pulse_rate?: number;
+    respiratory_rate?: number;
+    temperature?: number;
+    oxygen_saturation?: number;
+    height?: number;
+    weight?: number;
+  };
   handleNumberChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
 }
 
 export const PatientVitalsSection: React.FC<PatientVitalsSectionProps> = ({
   formData,
   handleNumberChange,
-  handleChange,
 }) => {
   return (
     <Card className="mb-6">

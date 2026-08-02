@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, User, FileText, X } from 'lucide-react';
 import patientService, { Patient } from '../../services/patientService';
+import { IconButton } from './IconButton';
 
 interface CommandSearchModalProps {
   isOpen: boolean;
@@ -16,7 +17,6 @@ export function CommandSearchModal({ isOpen, onClose }: CommandSearchModalProps)
 
   useEffect(() => {
     if (!query.trim()) {
-      setResults([]);
       return;
     }
 
@@ -37,69 +37,72 @@ export function CommandSearchModal({ isOpen, onClose }: CommandSearchModalProps)
 
   if (!isOpen) return null;
 
+  const activeResults = query.trim() ? results : [];
+
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 p-4 bg-overlay backdrop-blur-xs animate-in fade-in duration-150">
       <div
-        className="bg-white rounded-2xl shadow-2xl border border-slate-100 max-w-xl w-full overflow-hidden"
+        className="bg-surface-raised rounded-2xl shadow-2xl border border-border max-w-xl w-full overflow-hidden text-text"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Header */}
-        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-slate-100">
-          <Search className="w-5 h-5 text-slate-400 shrink-0" />
+        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-border">
+          <Search className="w-5 h-5 text-text-muted shrink-0" />
           <input
             type="text"
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search patients, case files, or phone numbers..."
-            className="w-full text-sm text-slate-900 placeholder-slate-400 bg-transparent focus:outline-none"
+            className="w-full text-sm text-text placeholder:text-text-disabled bg-transparent focus:outline-none"
           />
-          <button
+          <IconButton
+            icon={<X className="w-4 h-4" />}
+            aria-label="Close search"
+            variant="ghost"
+            size="sm"
             onClick={onClose}
-            className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          />
         </div>
 
         {/* Results / List */}
         <div className="max-h-80 overflow-y-auto p-2">
           {isLoading && (
-            <div className="py-8 text-center text-xs text-slate-400">Searching EMR records...</div>
+            <div className="py-8 text-center text-xs text-text-muted">Searching EMR records...</div>
           )}
 
-          {!isLoading && query && results.length === 0 && (
-            <div className="py-8 text-center text-xs text-slate-400">
+          {!isLoading && query && activeResults.length === 0 && (
+            <div className="py-8 text-center text-xs text-text-muted">
               No matching patient records found for "<span className="font-semibold">{query}</span>"
             </div>
           )}
 
-          {!isLoading && results.length > 0 && (
+          {!isLoading && activeResults.length > 0 && (
             <div className="space-y-1">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-3 py-1">
-                Patients ({results.length})
+              <p className="text-[11px] font-bold uppercase tracking-wider text-text-subtle px-3 py-1">
+                Patients ({activeResults.length})
               </p>
-              {results.map((patient) => (
+              {activeResults.map((patient) => (
                 <button
                   key={patient.id}
                   onClick={() => {
                     navigate(`/dashboard/patients/${patient.id}`);
                     onClose();
                   }}
-                  className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 text-left transition group"
+                  className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-surface-hover text-left transition group cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 border border-teal-100 flex items-center justify-center font-bold text-xs">
+                    <div className="w-8 h-8 rounded-lg bg-primary-subtle text-primary border border-primary-border flex items-center justify-center font-bold text-xs">
                       <User className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-slate-900 group-hover:text-teal-600 transition-colors">
+                      <p className="text-sm font-bold text-text group-hover:text-primary transition-colors">
                         {patient.full_name}
                       </p>
-                      <p className="text-xs text-slate-400">{patient.contact_phone} • {patient.gender || 'Patient'}</p>
+                      <p className="text-xs text-text-muted">{patient.contact_phone} • {patient.gender || 'Patient'}</p>
                     </div>
                   </div>
-                  <span className="text-xs font-bold text-teal-600 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-100">
+                  <span className="text-xs font-bold text-primary-subtle-text bg-primary-subtle px-2 py-0.5 rounded-md border border-primary-border">
                     {patient.case_id}
                   </span>
                 </button>
@@ -109,15 +112,15 @@ export function CommandSearchModal({ isOpen, onClose }: CommandSearchModalProps)
 
           {!query && (
             <div className="p-4 space-y-2">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Quick Navigation</p>
+              <p className="text-xs font-bold text-text-subtle uppercase tracking-wider mb-2">Quick Navigation</p>
               <button
                 onClick={() => {
                   navigate('/dashboard/patients/new');
                   onClose();
                 }}
-                className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-left transition text-xs font-bold text-slate-700"
+                className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-surface-hover text-left transition text-xs font-bold text-text cursor-pointer"
               >
-                <User className="w-4 h-4 text-teal-600" />
+                <User className="w-4 h-4 text-primary" />
                 Register New Patient
               </button>
               <button
@@ -125,17 +128,17 @@ export function CommandSearchModal({ isOpen, onClose }: CommandSearchModalProps)
                   navigate('/dashboard/patients');
                   onClose();
                 }}
-                className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-left transition text-xs font-bold text-slate-700"
+                className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-surface-hover text-left transition text-xs font-bold text-text cursor-pointer"
               >
-                <FileText className="w-4 h-4 text-teal-600" />
+                <FileText className="w-4 h-4 text-primary" />
                 View Patient Registry
               </button>
             </div>
           )}
         </div>
 
-        <div className="px-4 py-2 bg-slate-50 border-t border-slate-100 flex justify-between text-[11px] text-slate-400">
-          <span>Tip: Press <kbd className="px-1.5 py-0.5 bg-white border rounded text-[10px] font-mono shadow-xs">ESC</kbd> to close</span>
+        <div className="px-4 py-2 bg-surface-sunken border-t border-border flex justify-between text-[11px] text-text-subtle">
+          <span>Tip: Press <kbd className="px-1.5 py-0.5 bg-surface border border-border rounded text-[10px] font-mono shadow-xs">ESC</kbd> to close</span>
           <span>Dr. ZAID's Homeo Care EMR</span>
         </div>
       </div>
