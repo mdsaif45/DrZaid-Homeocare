@@ -73,6 +73,10 @@ export class PatientService {
     return this.patientRepo.getStats();
   }
 
+  async getAnalytics(timeframe?: string) {
+    return this.patientRepo.getAnalytics(timeframe);
+  }
+
   async getRecent(limit: number) {
     return this.patientRepo.getRecent(limit);
   }

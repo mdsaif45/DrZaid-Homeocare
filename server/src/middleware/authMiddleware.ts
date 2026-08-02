@@ -33,7 +33,7 @@ export const protect = async (
     }
 
     const { password_hash, ...userResponse } = user;
-    req.user = userResponse;
+    req.user = { ...userResponse, role: userResponse.role as any };
 
     next();
   } catch (error) {
@@ -71,7 +71,7 @@ export const optionalAuth = async (
         const user = await userRepo.findById(payload.userId);
         if (user && user.is_active) {
           const { password_hash, ...userResponse } = user;
-          req.user = userResponse;
+          req.user = { ...userResponse, role: userResponse.role as any };
         }
       }
     }

@@ -106,9 +106,70 @@ export class SqlitePatientRepository implements IPatientRepository {
     return res.changes > 0;
   }
 
-  async getStats(): Promise<{ totalPatients: number }> {
-    const row = await dbGet<{ count: number }>('SELECT COUNT(*) as count FROM patients');
-    return { totalPatients: row?.count || 0 };
+  async getStats(): Promise<{ total: number; today: number; thisWeek: number; thisMonth: number }> {
+    const totalRow = await dbGet<{ count: number }>('SELECT COUNT(*) as count FROM patients');
+    const todayRow = await dbGet<{ count: number }>(
+      "SELECT COUNT(*) as count FROM patients WHERE date(created_at) = date('now')"
+    );
+    const weekRow = await dbGet<{ count: number }>(
+      "SELECT COUNT(*) as count FROM patients WHERE created_at >= date('now', '-7 days')"
+    );
+    const monthRow = await dbGet<{ count: number }>(
+      "SELECT COUNT(*) as count FROM prescriptions WHERE created_at >= date('now', '-30 days')"
+    );
+
+    return {
+      total: totalRow?.count || 0,
+      today: todayRow?.count || 0,
+      thisWeek: weekRow?.count || 0,
+      thisMonth: monthRow?.count || 0,
+    };
+  }
+
+  async getAnalytics(timeframe?: string): Promise<{ visits: { month: string; visits: number }[]; topRemedies: { remedy: string; count: number }[] }> {
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    let dateFilter = "WHERE strftime('%Y', created_at) = strftime('%Y', 'now')";
+    let prescriptionDateFilter = "WHERE remedy_name IS NOT NULL AND remedy_name != '' AND strftime('%Y', created_at) = strftime('%Y', 'now')";
+
+    if (timeframe === 'This Month') {
+      dateFilter = "WHERE date(created_at) >= date('now', 'start of month')";
+      prescriptionDateFilter = "WHERE remedy_name IS NOT NULL AND remedy_name != '' AND date(created_at) >= date('now', 'start of month')";
+    } else if (timeframe === 'All Time') {
+      dateFilter = '';
+      prescriptionDateFilter = "WHERE remedy_name IS NOT NULL AND remedy_name != ''";
+    }
+
+    const rawVisits = await dbQuery<{ m: string; c: number }>(
+      `SELECT strftime('%m', created_at) as m, COUNT(*) as c 
+       FROM patients 
+       ${dateFilter}
+       GROUP BY m 
+       ORDER BY m ASC`
+    );
+
+    const visits = monthNames.map((name, idx) => {
+      const monthNumStr = String(idx + 1).padStart(2, '0');
+      const found = rawVisits.find((v) => v.m === monthNumStr);
+      return {
+        month: name,
+        visits: found ? Number(found.c) : 0,
+      };
+    });
+
+    const rawRemedies = await dbQuery<{ remedy: string; count: number }>(
+      `SELECT remedy_name as remedy, COUNT(*) as count 
+       FROM prescriptions 
+       ${prescriptionDateFilter}
+       GROUP BY remedy_name 
+       ORDER BY count DESC 
+       LIMIT 6`
+    );
+
+    return {
+      visits,
+      topRemedies: rawRemedies.map((r) => ({ remedy: r.remedy, count: Number(r.count) })),
+    };
   }
 
   async getRecent(limit: number): Promise<any[]> {

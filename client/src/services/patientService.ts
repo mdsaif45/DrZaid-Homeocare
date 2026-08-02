@@ -47,6 +47,11 @@ export interface PatientStats {
   thisMonth: number;
 }
 
+export interface AnalyticsData {
+  visits: { month: string; visits: number }[];
+  topRemedies: { remedy: string; count: number }[];
+}
+
 class PatientService {
   /**
    * Get all patients with pagination and search
@@ -110,6 +115,15 @@ class PatientService {
   async getStats(): Promise<PatientStats> {
     const response = await api.get('/patients/stats');
     return response.data.data.stats;
+  }
+
+  /**
+   * Get real-time patient visit and remedy analytics
+   */
+  async getAnalytics(timeframe?: string): Promise<AnalyticsData> {
+    const params = timeframe ? `?timeframe=${encodeURIComponent(timeframe)}` : '';
+    const response = await api.get(`/patients/analytics${params}`);
+    return response.data.data.analytics;
   }
 
   /**

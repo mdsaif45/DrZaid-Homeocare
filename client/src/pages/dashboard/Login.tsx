@@ -1,12 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login, isLoading, error, clearError } = useAuthStore();
+  const { login, isLoading, error, clearError, isAuthenticated } = useAuthStore();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -110,7 +116,7 @@ export default function Login() {
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Email Address</label>
                 <input type="email" name="email" value={formData.email} onChange={handleChange} required
-                  placeholder="dr.zaid@homeocare.com"
+                  placeholder="doctor@homeocare.com"
                   className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition bg-slate-50" />
               </div>
 
@@ -143,15 +149,6 @@ export default function Login() {
                 ) : 'Sign In →'}
               </button>
             </form>
-
-            {/* Demo credentials */}
-            <div className="mt-6 p-4 bg-teal-50 border border-teal-100 rounded-xl">
-              <p className="text-xs font-bold text-teal-700 mb-2">Demo Credentials</p>
-              <div className="space-y-1">
-                <p className="text-xs text-teal-600 font-medium">Email: <span className="font-bold">dr.zaid@homeocare.com</span></p>
-                <p className="text-xs text-teal-600 font-medium">Password: <span className="font-bold">admin123</span></p>
-              </div>
-            </div>
           </div>
 
           <p className="text-center text-xs text-slate-400 mt-6">

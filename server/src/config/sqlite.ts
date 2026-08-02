@@ -1,7 +1,9 @@
 import initSqlJs, { Database } from 'sql.js';
 import fs from 'fs';
 import path from 'path';
+import bcrypt from 'bcrypt';
 import { logger } from '../utils/logger.js';
+import { envConfig } from './env.js';
 
 const rootDir = fs.existsSync(path.join(process.cwd(), 'server'))
   ? path.join(process.cwd(), 'server')
@@ -37,7 +39,7 @@ export async function getDb(): Promise<Database> {
     }
 
     ensureMigrations(dbInstance);
-    seedDefaultUser(dbInstance);
+    await seedDefaultUser(dbInstance);
     saveDb(dbInstance);
 
     return dbInstance;
@@ -64,22 +66,22 @@ function ensureMigrations(db: Database) {
   }
 }
 
-function seedDefaultUser(db: Database) {
+async function seedDefaultUser(db: Database) {
   try {
-    const res = db.exec("SELECT * FROM users WHERE email = 'dr.zaid@homeocare.com'");
-    if (!res || res.length === 0 || !res[0].values || res[0].values.length === 0) {
+    const email = envConfig.adminEmail;
+    const stmt = db.prepare('SELECT * FROM users WHERE email = ?');
+    stmt.bind([email]);
+    const hasUser = stmt.step();
+    stmt.free();
+
+    if (!hasUser) {
+      const passwordHash = await bcrypt.hash(envConfig.adminPassword || 'admin123', 10);
       db.run(
         `INSERT INTO users (email, password_hash, full_name, role, phone)
          VALUES (?, ?, ?, ?, ?)`,
-        [
-          'dr.zaid@homeocare.com',
-          '$2b$10$XeGscYOxRQpl2TNBKW3c9eSqG/ua7hu4wfv0Ek/4XRnbyI9yM2nMi',
-          'Dr. MD Zaid',
-          'doctor',
-          '+91 98765 43210',
-        ]
+        [email, passwordHash, envConfig.adminName, 'doctor', '+91 98765 43210']
       );
-      logger.info('✅ Verified & seeded default doctor user: dr.zaid@homeocare.com / admin123');
+      logger.info(`✅ Verified & seeded default doctor user: ${email}`);
     }
   } catch (err) {
     logger.error('SQLite seeding error:', err);
@@ -96,11 +98,24 @@ export function saveDb(db: Database) {
   }
 }
 
+function sanitizeParams(params: any[] = []): any[] {
+  return params.map((p) => {
+    if (p instanceof Date) {
+      return p.toISOString();
+    }
+    if (p === undefined) {
+      return null;
+    }
+    return p;
+  });
+}
+
 export const dbQuery = async <T = any>(sql: string, params: any[] = []): Promise<T[]> => {
   const dbInstance = await getDb();
+  const sanitized = sanitizeParams(params);
   const stmt = dbInstance.prepare(sql);
-  if (params && params.length > 0) {
-    stmt.bind(params);
+  if (sanitized && sanitized.length > 0) {
+    stmt.bind(sanitized);
   }
   const rows: T[] = [];
   while (stmt.step()) {
@@ -117,7 +132,8 @@ export const dbGet = async <T = any>(sql: string, params: any[] = []): Promise<T
 
 export const dbRun = async (sql: string, params: any[] = []): Promise<{ lastID: number; changes: number }> => {
   const dbInstance = await getDb();
-  dbInstance.run(sql, params);
+  const sanitized = sanitizeParams(params);
+  dbInstance.run(sql, sanitized);
   saveDb(dbInstance);
   return { lastID: 0, changes: 1 };
 };

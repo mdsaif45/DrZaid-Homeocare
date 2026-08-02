@@ -97,11 +97,15 @@ export class SqlitePrescriptionRepository implements IPrescriptionRepository {
   }
 
   async getUpcomingFollowUps(days: number): Promise<any[]> {
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() + days);
     return dbQuery(
       `SELECT * FROM prescriptions
-       WHERE follow_up_date >= date('now') AND follow_up_date <= date('now', '+' || ? || ' days')
+       WHERE follow_up_date IS NOT NULL
+         AND datetime(follow_up_date) >= datetime('now')
+         AND datetime(follow_up_date) <= datetime(?)
        ORDER BY follow_up_date ASC`,
-      [days]
+      [targetDate.toISOString()]
     );
   }
 

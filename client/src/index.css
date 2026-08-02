@@ -7,43 +7,85 @@
   
   --color-secondary: #f59e0b;
   --color-accent: #6366f1;
-  
-  --color-surface-50: #fafafa;
-  --color-surface-100: #f4f4f5;
-  --color-surface-200: #e4e4e7;
-  
+
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+/* Professional CSS Design Token System */
+:root {
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f5f9;
+  --bg-header: #ffffff;
+  --bg-sidebar: #020617;
+  --border-color: #f1f5f9;
+  --border-muted: #e2e8f0;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --teal-accent: #0d9488;
+  --color-scheme: light;
+}
+
+.dark {
+  --bg-main: #090d16;
+  --bg-card: #0f172a;
+  --bg-card-hover: #1e293b;
+  --bg-header: #0b1120;
+  --bg-sidebar: #020617;
+  --border-color: #1e293b;
+  --border-muted: #334155;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --teal-accent: #14b8a6;
+  --color-scheme: dark;
 }
 
 @layer base {
   body {
-    @apply bg-white text-slate-900 antialiased;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    transition: background-color 0.2s ease, color 0.2s ease;
+    @apply antialiased;
   }
-  
+
   h1, h2, h3, h4, h5, h6 {
-    @apply tracking-tight font-bold text-slate-900;
+    @apply tracking-tight font-bold;
+    color: var(--text-primary);
   }
 }
 
-/* Professional Scrollbar */
+/* Professional Custom Scrollbars */
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-surface-100);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-surface-200);
+  background: #cbd5e1;
   border-radius: 10px;
 }
 
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
 ::-webkit-scrollbar-thumb:hover {
-  background: #d4d4d8;
+  background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
 }
 
 /* Smooth Scrolling */
 html {
   scroll-behavior: smooth;
+  color-scheme: var(--color-scheme);
 }

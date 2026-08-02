@@ -93,6 +93,16 @@ export const getPatientStats = asyncHandler(async (req: Request, res: Response) 
   });
 });
 
+export const getPatientAnalytics = asyncHandler(async (req: Request, res: Response) => {
+  const timeframe = req.query.timeframe as string;
+  const analytics = await patientService.getAnalytics(timeframe);
+
+  res.status(200).json({
+    success: true,
+    data: { analytics },
+  });
+});
+
 export const searchPatients = asyncHandler(async (req: Request, res: Response) => {
   const criteria = req.body;
 

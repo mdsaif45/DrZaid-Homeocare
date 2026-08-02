@@ -6,6 +6,7 @@ import {
   updatePatient,
   deletePatient,
   getPatientStats,
+  getPatientAnalytics,
   searchPatients,
   getRecentPatients,
   getPatientByCaseId,
@@ -21,6 +22,7 @@ router.use(protect);
 
 // Stats and special routes (must be before :id routes)
 router.get('/stats', getPatientStats);
+router.get('/analytics', getPatientAnalytics);
 router.get('/recent', getRecentPatients);
 router.post('/search', searchPatients);
 router.get('/case/:caseId', getPatientByCaseId);

@@ -8,27 +8,54 @@ export default function PatientList() {
 
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   useEffect(() => {
     fetchPatients(currentPage, 20, search);
+    setSelectedIds([]);
   }, [currentPage, fetchPatients]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setCurrentPage(1);
+    setSelectedIds([]);
     fetchPatients(1, 20, search);
   };
 
-  const handleDelete = async (id: number) => {
-    try {
-      await deletePatient(id);
-      setDeleteConfirm(null);
-      fetchPatients(currentPage, 20, search);
-    } catch (err) {
-      console.error('Delete failed:', err);
+  const handleToggleSelectAll = () => {
+    if (selectedIds.length === patients.length && patients.length > 0) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(patients.map((p) => p.id));
     }
   };
+
+  const handleToggleSelectOne = (id: number) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    setIsDeleting(true);
+    try {
+      for (const id of selectedIds) {
+        await deletePatient(id);
+      }
+      setSelectedIds([]);
+      setShowBulkDeleteConfirm(false);
+      fetchPatients(currentPage, 20, search);
+    } catch (err) {
+      console.error('Bulk delete failed:', err);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const isAllSelected = patients.length > 0 && selectedIds.length === patients.length;
 
   return (
     <div className="space-y-6">
@@ -40,15 +67,28 @@ export default function PatientList() {
             {pagination ? `${pagination.total} total records` : 'Manage patient records'}
           </p>
         </div>
-        <button
-          onClick={() => navigate('/dashboard/patients/new')}
-          className="inline-flex items-center gap-2 bg-teal-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-teal-700 transition-all shadow-md shadow-teal-600/20 active:scale-95"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-          Add New Patient
-        </button>
+        <div className="flex items-center gap-3">
+          {selectedIds.length > 0 && (
+            <button
+              onClick={() => setShowBulkDeleteConfirm(true)}
+              className="inline-flex items-center gap-2 bg-rose-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-rose-700 transition-all shadow-md shadow-rose-600/20 active:scale-95"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Delete Selected ({selectedIds.length})
+            </button>
+          )}
+          <button
+            onClick={() => navigate('/dashboard/patients/new')}
+            className="inline-flex items-center gap-2 bg-teal-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-teal-700 transition-all shadow-md shadow-teal-600/20 active:scale-95"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Add New Patient
+          </button>
+        </div>
       </div>
 
       {/* Search */}
@@ -102,47 +142,70 @@ export default function PatientList() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/60">
-                {['Case ID', 'Patient', 'Age / Gender', 'Phone', 'Registered', 'Actions'].map((h, i) => (
-                  <th key={h} className={`px-5 py-3.5 text-xs font-bold text-slate-400 uppercase tracking-wider ${i === 5 ? 'text-right' : 'text-left'}`}>
-                    {h}
-                  </th>
-                ))}
+                <th className="w-12 px-4 py-3.5 text-center">
+                  <input
+                    type="checkbox"
+                    checked={isAllSelected}
+                    onChange={handleToggleSelectAll}
+                    className="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500 cursor-pointer"
+                  />
+                </th>
+                <th className="px-5 py-3.5 text-xs font-bold text-slate-400 uppercase tracking-wider text-left">Case ID</th>
+                <th className="px-5 py-3.5 text-xs font-bold text-slate-400 uppercase tracking-wider text-left">Patient</th>
+                <th className="px-5 py-3.5 text-xs font-bold text-slate-400 uppercase tracking-wider text-left">Age / Gender</th>
+                <th className="px-5 py-3.5 text-xs font-bold text-slate-400 uppercase tracking-wider text-left">Phone</th>
+                <th className="px-5 py-3.5 text-xs font-bold text-slate-400 uppercase tracking-wider text-left">Registered</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {patients.map((patient) => (
-                <tr key={patient.id} className="hover:bg-slate-50/70 transition-colors group">
-                  <td className="px-5 py-4 whitespace-nowrap">
-                    <span className="text-xs font-bold text-teal-600 bg-teal-50 border border-teal-100 px-2.5 py-1 rounded-lg">
-                      {patient.case_id}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4">
-                    <p className="text-sm font-bold text-slate-900">{patient.full_name}</p>
-                    {patient.occupation && (
-                      <p className="text-xs text-slate-400 mt-0.5">{patient.occupation}</p>
-                    )}
-                  </td>
-                  <td className="px-5 py-4 whitespace-nowrap">
-                    <span className="text-sm text-slate-600 font-medium">
-                      {patient.age ? `${patient.age}y` : '—'} / <span className="capitalize">{patient.gender || '—'}</span>
-                    </span>
-                  </td>
-                  <td className="px-5 py-4 whitespace-nowrap text-sm text-slate-600 font-medium">
-                    {patient.contact_phone}
-                  </td>
-                  <td className="px-5 py-4 whitespace-nowrap text-sm text-slate-400 font-medium">
-                    {new Date(patient.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                  </td>
-                  <td className="px-5 py-4 whitespace-nowrap text-right">
-                    <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <ActionBtn onClick={() => navigate(`/dashboard/patients/${patient.id}`)} label="View" color="teal" />
-                      <ActionBtn onClick={() => navigate(`/dashboard/patients/${patient.id}/edit`)} label="Edit" color="slate" />
-                      <ActionBtn onClick={() => setDeleteConfirm(patient.id)} label="Delete" color="red" />
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {patients.map((patient) => {
+                const isSelected = selectedIds.includes(patient.id);
+                return (
+                  <tr
+                    key={patient.id}
+                    className={`hover:bg-slate-50/80 transition-colors ${isSelected ? 'bg-teal-50/30' : ''}`}
+                  >
+                    <td className="px-4 py-4 text-center whitespace-nowrap">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => handleToggleSelectOne(patient.id)}
+                        className="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500 cursor-pointer"
+                      />
+                    </td>
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      <button
+                        onClick={() => navigate(`/dashboard/patients/${patient.id}`)}
+                        className="text-xs font-bold text-teal-700 bg-teal-50 border border-teal-200 hover:bg-teal-100 hover:border-teal-300 px-2.5 py-1 rounded-lg transition-colors"
+                      >
+                        {patient.case_id}
+                      </button>
+                    </td>
+                    <td className="px-5 py-4">
+                      <button
+                        onClick={() => navigate(`/dashboard/patients/${patient.id}`)}
+                        className="text-left font-bold text-slate-900 hover:text-teal-600 text-sm transition-colors block"
+                      >
+                        {patient.full_name}
+                      </button>
+                      {patient.occupation && (
+                        <p className="text-xs text-slate-400 mt-0.5">{patient.occupation}</p>
+                      )}
+                    </td>
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      <span className="text-sm text-slate-600 font-medium">
+                        {patient.age ? `${patient.age}y` : '—'} / <span className="capitalize">{patient.gender || '—'}</span>
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 whitespace-nowrap text-sm text-slate-600 font-medium">
+                      {patient.contact_phone}
+                    </td>
+                    <td className="px-5 py-4 whitespace-nowrap text-sm text-slate-400 font-medium">
+                      {new Date(patient.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
 
@@ -187,46 +250,38 @@ export default function PatientList() {
         </div>
       )}
 
-      {/* Delete modal */}
-      {deleteConfirm && (
+      {/* Bulk Delete Confirmation Modal */}
+      {showBulkDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full">
-            <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4">
-              <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <div className="w-12 h-12 bg-rose-50 rounded-xl flex items-center justify-center mb-4">
+              <svg className="w-6 h-6 text-rose-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
               </svg>
             </div>
-            <h3 className="text-base font-extrabold text-slate-900 mb-2">Delete Patient Record</h3>
+            <h3 className="text-base font-extrabold text-slate-900 mb-2">Delete {selectedIds.length} Patient Record(s)</h3>
             <p className="text-sm text-slate-500 leading-relaxed mb-6">
-              This will permanently remove the patient and all associated case records and prescriptions. This cannot be undone.
+              This will permanently remove the selected patient(s) and all associated case records and prescriptions. This action cannot be undone.
             </p>
             <div className="flex gap-3">
-              <button onClick={() => setDeleteConfirm(null)}
-                className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition">
+              <button
+                disabled={isDeleting}
+                onClick={() => setShowBulkDeleteConfirm(false)}
+                className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition"
+              >
                 Cancel
               </button>
-              <button onClick={() => handleDelete(deleteConfirm)}
-                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 transition active:scale-95">
-                Delete
+              <button
+                disabled={isDeleting}
+                onClick={handleBulkDelete}
+                className="flex-1 px-4 py-2.5 bg-rose-600 text-white rounded-xl text-sm font-bold hover:bg-rose-700 transition active:scale-95 disabled:opacity-50"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Selected'}
               </button>
             </div>
           </div>
         </div>
       )}
     </div>
-  );
-}
-
-function ActionBtn({ onClick, label, color }: { onClick: () => void; label: string; color: 'teal' | 'slate' | 'red' }) {
-  const cls = {
-    teal: 'text-teal-600 hover:bg-teal-50 border-teal-100',
-    slate: 'text-slate-600 hover:bg-slate-100 border-slate-100',
-    red: 'text-red-500 hover:bg-red-50 border-red-100',
-  }[color];
-  return (
-    <button onClick={onClick}
-      className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${cls}`}>
-      {label}
-    </button>
   );
 }

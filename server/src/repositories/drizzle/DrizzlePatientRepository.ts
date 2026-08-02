@@ -1,6 +1,7 @@
-import { eq, ilike, or, count, desc } from 'drizzle-orm';
+import { eq, ilike, or, count, desc, gte, sql } from 'drizzle-orm';
 import { db } from '../../db/index.js';
 import { patients, PatientSelect, PatientInsert } from '../../db/schema/patients.js';
+import { prescriptions } from '../../db/schema/prescriptions.js';
 import { IPatientRepository } from '../interfaces/IPatientRepository.js';
 
 export class DrizzlePatientRepository implements IPatientRepository {
@@ -65,9 +66,54 @@ export class DrizzlePatientRepository implements IPatientRepository {
     return res.length > 0;
   }
 
-  async getStats(): Promise<{ totalPatients: number }> {
+  async getStats(): Promise<{ total: number; today: number; thisWeek: number; thisMonth: number }> {
     const total = await db.select({ count: count() }).from(patients);
-    return { totalPatients: Number(total[0]?.count || 0) };
+    const today = await db.select({ count: count() }).from(patients).where(sql`DATE(created_at) = CURRENT_DATE`);
+    const week = await db.select({ count: count() }).from(patients).where(sql`created_at >= NOW() - INTERVAL '7 days'`);
+    const month = await db.select({ count: count() }).from(prescriptions).where(sql`created_at >= NOW() - INTERVAL '30 days'`);
+
+    return {
+      total: Number(total[0]?.count || 0),
+      today: Number(today[0]?.count || 0),
+      thisWeek: Number(week[0]?.count || 0),
+      thisMonth: Number(month[0]?.count || 0),
+    };
+  }
+
+  async getAnalytics(): Promise<{ visits: { month: string; visits: number }[]; topRemedies: { remedy: string; count: number }[] }> {
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    const rawVisits = await db
+      .select({
+        m: sql<string>`TO_CHAR(created_at, 'MM')`,
+        c: count(),
+      })
+      .from(patients)
+      .groupBy(sql`TO_CHAR(created_at, 'MM')`);
+
+    const visits = monthNames.map((name, idx) => {
+      const monthNumStr = String(idx + 1).padStart(2, '0');
+      const found = rawVisits.find((v) => v.m === monthNumStr);
+      return {
+        month: name,
+        visits: found ? Number(found.c) : 0,
+      };
+    });
+
+    const rawRemedies = await db
+      .select({
+        remedy: prescriptions.remedy_name,
+        count: count(),
+      })
+      .from(prescriptions)
+      .groupBy(prescriptions.remedy_name)
+      .orderBy(desc(count()))
+      .limit(6);
+
+    return {
+      visits,
+      topRemedies: rawRemedies.map((r) => ({ remedy: r.remedy || 'Unknown', count: Number(r.count) })),
+    };
   }
 
   async getRecent(limit: number): Promise<PatientSelect[]> {
