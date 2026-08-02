@@ -1,59 +1,85 @@
 @import "tailwindcss";
+@import "./styles/theme.css";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme {
-  --color-primary: #0d9488;
-  --color-primary-dark: #0f766e;
-  --color-primary-light: #2dd4bf;
-  
-  --color-secondary: #f59e0b;
-  --color-accent: #6366f1;
+  --color-bg: var(--color-bg);
+  --color-bg-subtle: var(--color-bg-subtle);
+  --color-surface: var(--color-surface);
+  --color-surface-raised: var(--color-surface-raised);
+  --color-surface-sunken: var(--color-surface-sunken);
+  --color-surface-hover: var(--color-surface-hover);
+  --color-overlay: var(--color-overlay);
+
+  --color-sidebar-bg: var(--color-sidebar-bg);
+  --color-sidebar-text: var(--color-sidebar-text);
+  --color-sidebar-muted: var(--color-sidebar-muted);
+  --color-sidebar-border: var(--color-sidebar-border);
+  --color-sidebar-hover: var(--color-sidebar-hover);
+  --color-sidebar-accent: var(--color-sidebar-accent);
+
+  --color-text: var(--color-text);
+  --color-text-muted: var(--color-text-muted);
+  --color-text-subtle: var(--color-text-subtle);
+  --color-text-disabled: var(--color-text-disabled);
+  --color-text-inverse: var(--color-text-inverse);
+  --color-text-on-brand: var(--color-text-on-brand);
+
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+  --color-border-subtle: var(--color-border-subtle);
+  --color-focus-ring: var(--color-focus-ring);
+
+  --color-primary: var(--color-primary);
+  --color-primary-hover: var(--color-primary-hover);
+  --color-primary-active: var(--color-primary-active);
+  --color-primary-subtle: var(--color-primary-subtle);
+  --color-primary-subtle-text: var(--color-primary-subtle-text);
+  --color-primary-border: var(--color-primary-border);
+  --color-primary-text: var(--color-primary-text);
+
+  --color-success: var(--color-success);
+  --color-success-hover: var(--color-success-hover);
+  --color-success-subtle: var(--color-success-subtle);
+  --color-success-subtle-text: var(--color-success-subtle-text);
+  --color-success-border: var(--color-success-border);
+
+  --color-warning: var(--color-warning);
+  --color-warning-hover: var(--color-warning-hover);
+  --color-warning-subtle: var(--color-warning-subtle);
+  --color-warning-subtle-text: var(--color-warning-subtle-text);
+  --color-warning-border: var(--color-warning-border);
+
+  --color-danger: var(--color-danger);
+  --color-danger-hover: var(--color-danger-hover);
+  --color-danger-subtle: var(--color-danger-subtle);
+  --color-danger-subtle-text: var(--color-danger-subtle-text);
+  --color-danger-border: var(--color-danger-border);
+
+  --color-info: var(--color-info);
+  --color-info-hover: var(--color-info-hover);
+  --color-info-subtle: var(--color-info-subtle);
+  --color-info-subtle-text: var(--color-info-subtle-text);
+  --color-info-border: var(--color-info-border);
+
+  --color-glass-bg: var(--color-glass-bg);
+  --color-glass-border: var(--color-glass-border);
 
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
 }
 
-/* Professional CSS Design Token System */
-:root {
-  --bg-main: #f8fafc;
-  --bg-card: #ffffff;
-  --bg-card-hover: #f1f5f9;
-  --bg-header: #ffffff;
-  --bg-sidebar: #020617;
-  --border-color: #f1f5f9;
-  --border-muted: #e2e8f0;
-  --text-primary: #0f172a;
-  --text-secondary: #64748b;
-  --text-muted: #94a3b8;
-  --teal-accent: #0d9488;
-  --color-scheme: light;
-}
-
-.dark {
-  --bg-main: #090d16;
-  --bg-card: #0f172a;
-  --bg-card-hover: #1e293b;
-  --bg-header: #0b1120;
-  --bg-sidebar: #020617;
-  --border-color: #1e293b;
-  --border-muted: #334155;
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --teal-accent: #14b8a6;
-  --color-scheme: dark;
-}
-
 @layer base {
   body {
-    background-color: var(--bg-main);
-    color: var(--text-primary);
+    background-color: var(--color-bg);
+    color: var(--color-text);
     font-family: var(--font-sans);
-    transition: background-color 0.2s ease, color 0.2s ease;
     @apply antialiased;
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply tracking-tight font-bold;
-    color: var(--text-primary);
+    color: var(--color-text);
   }
 }
 
@@ -68,20 +94,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--color-border-strong);
   border-radius: 10px;
 }
 
-.dark ::-webkit-scrollbar-thumb {
-  background: #334155;
-}
-
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: var(--color-text-subtle);
 }
 
 /* Smooth Scrolling */
