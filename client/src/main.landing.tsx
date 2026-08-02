@@ -1,5 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { ThemeProvider } from './theme';
 import './index.css';
 import Consultant from './pages/public/Consultant';
 
@@ -8,10 +9,12 @@ import Consultant from './pages/public/Consultant';
  *
  * Pages serves static files only — there is no Express API and no database — so
  * this bundle deliberately excludes the router, auth store, and every dashboard
- * route. It renders the consultant landing page and nothing else.
+ * route. It renders the consultant landing page wrapped in ThemeProvider.
  */
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Consultant />
+    <ThemeProvider>
+      <Consultant />
+    </ThemeProvider>
   </StrictMode>,
 );
