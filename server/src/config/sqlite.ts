@@ -3,8 +3,12 @@ import fs from 'fs';
 import path from 'path';
 import { logger } from '../utils/logger.js';
 
-const DB_PATH = path.join(process.cwd(), 'homeocare.sqlite');
-const SCHEMA_PATH = path.join(process.cwd(), 'src', 'db', 'sqliteSchema.sql');
+const rootDir = fs.existsSync(path.join(process.cwd(), 'server'))
+  ? path.join(process.cwd(), 'server')
+  : process.cwd();
+
+const DB_PATH = path.join(rootDir, 'homeocare.sqlite');
+const SCHEMA_PATH = path.join(rootDir, 'src', 'db', 'sqliteSchema.sql');
 
 let dbInstance: Database | null = null;
 let dbInitPromise: Promise<Database> | null = null;
@@ -33,6 +37,7 @@ export async function getDb(): Promise<Database> {
     }
 
     ensureMigrations(dbInstance);
+    seedDefaultUser(dbInstance);
     saveDb(dbInstance);
 
     return dbInstance;
@@ -46,6 +51,8 @@ function initSqliteSchema(db: Database) {
     const sql = fs.readFileSync(SCHEMA_PATH, 'utf-8');
     db.run(sql);
     logger.info('✅ SQLite schema initialized successfully from sqliteSchema.sql.');
+  } else {
+    logger.warn(`⚠️ SQLite schema file not found at: ${SCHEMA_PATH}`);
   }
 }
 
@@ -54,6 +61,28 @@ function ensureMigrations(db: Database) {
     initSqliteSchema(db);
   } catch (err) {
     logger.error('SQLite Schema sync error:', err);
+  }
+}
+
+function seedDefaultUser(db: Database) {
+  try {
+    const res = db.exec("SELECT * FROM users WHERE email = 'dr.zaid@homeocare.com'");
+    if (!res || res.length === 0 || !res[0].values || res[0].values.length === 0) {
+      db.run(
+        `INSERT INTO users (email, password_hash, full_name, role, phone)
+         VALUES (?, ?, ?, ?, ?)`,
+        [
+          'dr.zaid@homeocare.com',
+          '$2b$10$XeGscYOxRQpl2TNBKW3c9eSqG/ua7hu4wfv0Ek/4XRnbyI9yM2nMi',
+          'Dr. MD Zaid',
+          'doctor',
+          '+91 98765 43210',
+        ]
+      );
+      logger.info('✅ Verified & seeded default doctor user: dr.zaid@homeocare.com / admin123');
+    }
+  } catch (err) {
+    logger.error('SQLite seeding error:', err);
   }
 }
 
@@ -67,7 +96,6 @@ export function saveDb(db: Database) {
   }
 }
 
-// Promisified Helper Methods for SQLite Queries
 export const dbQuery = async <T = any>(sql: string, params: any[] = []): Promise<T[]> => {
   const dbInstance = await getDb();
   const stmt = dbInstance.prepare(sql);
