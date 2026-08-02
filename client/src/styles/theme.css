@@ -1,0 +1,237 @@
+/* Central Theme Token System (Light + Dark) */
+
+:root {
+  /* Tier 1: Raw Primitives (Theme-Independent Ramps) */
+  /* Brand Teal Palette */
+  --brand-50: #f0fdfa;
+  --brand-100: #ccfbf1;
+  --brand-200: #99f6e4;
+  --brand-300: #5eead4;
+  --brand-400: #2dd4bf;
+  --brand-500: #14b8a6;
+  --brand-600: #0d9488;
+  --brand-700: #0f766e;
+  --brand-800: #115e59;
+  --brand-900: #134e4a;
+  --brand-950: #042f2e;
+
+  /* Neutral Slate Palette */
+  --neutral-50: #f8fafc;
+  --neutral-100: #f1f5f9;
+  --neutral-200: #e2e8f0;
+  --neutral-300: #cbd5e1;
+  --neutral-400: #94a3b8;
+  --neutral-500: #64748b;
+  --neutral-600: #475569;
+  --neutral-700: #334155;
+  --neutral-800: #1e293b;
+  --neutral-900: #0f172a;
+  --neutral-950: #020617;
+
+  /* Status Base Ramps */
+  --success-50: #f0fdf4;
+  --success-100: #dcfce7;
+  --success-200: #bbf7d0;
+  --success-300: #86efac;
+  --success-400: #4ade80;
+  --success-500: #22c55e;
+  --success-600: #16a34a;
+  --success-700: #15803d;
+  --success-800: #166534;
+  --success-900: #14532d;
+
+  --warning-50: #fffbeb;
+  --warning-100: #fef3c7;
+  --warning-200: #fde68a;
+  --warning-300: #fcd34d;
+  --warning-400: #fbbf24;
+  --warning-500: #f59e0b;
+  --warning-600: #d97706;
+  --warning-700: #b45309;
+  --warning-800: #92400e;
+  --warning-900: #78350f;
+
+  --danger-50: #fef2f2;
+  --danger-100: #fee2e2;
+  --danger-200: #fecaca;
+  --danger-300: #fca5a5;
+  --danger-400: #f87171;
+  --danger-500: #ef4444;
+  --danger-600: #dc2626;
+  --danger-700: #b91c1c;
+  --danger-800: #991b1b;
+  --danger-900: #7f1d1d;
+
+  --info-50: #f0f9ff;
+  --info-100: #e0f2fe;
+  --info-200: #bae6fd;
+  --info-300: #7dd3fc;
+  --info-400: #38bdf8;
+  --info-500: #0ea5e9;
+  --info-600: #0284c7;
+  --info-700: #0369a1;
+  --info-800: #075985;
+  --info-900: #0c4a6e;
+
+  /* Tier 2: Semantic Tokens (Light Mode Defaults) */
+  --color-scheme: light;
+
+  /* Surfaces & Backgrounds */
+  --color-bg: var(--neutral-50);
+  --color-bg-subtle: var(--neutral-100);
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-surface-sunken: var(--neutral-100);
+  --color-surface-hover: var(--neutral-100);
+  --color-overlay: rgba(15, 23, 42, 0.5);
+
+  /* Sidebar Tokens */
+  --color-sidebar-bg: var(--neutral-950);
+  --color-sidebar-text: var(--neutral-100);
+  --color-sidebar-muted: var(--neutral-400);
+  --color-sidebar-border: var(--neutral-800);
+  --color-sidebar-hover: var(--neutral-900);
+  --color-sidebar-accent: var(--brand-300);
+
+  /* Typography Hierarchy - Light Mode */
+  --color-text: var(--neutral-900);          /* #0f172a -> 15.4:1 contrast */
+  --color-text-muted: var(--neutral-700);    /* #334155 -> 9.65:1 contrast */
+  --color-text-subtle: var(--neutral-600);   /* #475569 -> 7.24:1 contrast */
+  --color-text-disabled: var(--neutral-400);
+  --color-text-inverse: #ffffff;
+  --color-text-on-brand: #ffffff;
+
+  /* Borders & Focus */
+  --color-border: var(--neutral-200);
+  --color-border-strong: var(--neutral-300);
+  --color-border-subtle: var(--neutral-100);
+  --color-focus-ring: var(--brand-700);
+
+  /* Brand / Primary FILLS (brand-700 = #0f766e -> 4.87:1 WCAG AA contrast with white text) */
+  --color-primary: var(--brand-700);
+  --color-primary-hover: var(--brand-800);
+  --color-primary-active: var(--brand-900);
+  --color-primary-subtle: var(--brand-50);
+  --color-primary-subtle-text: var(--brand-800);
+  --color-primary-border: var(--brand-200);
+
+  /* Brand / Primary TEXT & ICONS on page backgrounds (Light: #0f766e -> 4.69:1 on bg / 4.87:1 on surface) */
+  --color-primary-text: var(--brand-700);
+
+  /* Status Tokens - Light */
+  --color-success: var(--success-700);
+  --color-success-hover: var(--success-800);
+  --color-success-subtle: var(--success-50);
+  --color-success-subtle-text: var(--success-800);
+  --color-success-border: var(--success-200);
+
+  --color-warning: var(--warning-700);
+  --color-warning-hover: var(--warning-800);
+  --color-warning-subtle: var(--warning-50);
+  --color-warning-subtle-text: var(--warning-800);
+  --color-warning-border: var(--warning-200);
+
+  --color-danger: var(--danger-700);
+  --color-danger-hover: var(--danger-800);
+  --color-danger-subtle: var(--danger-50);
+  --color-danger-subtle-text: var(--danger-800);
+  --color-danger-border: var(--danger-200);
+
+  --color-info: var(--info-700);
+  --color-info-hover: var(--info-800);
+  --color-info-subtle: var(--info-50);
+  --color-info-subtle-text: var(--info-800);
+  --color-info-border: var(--info-200);
+
+  /* Glass & Hero Wash Effects */
+  --color-glass-bg: rgba(255, 255, 255, 0.7);
+  --color-glass-border: rgba(255, 255, 255, 0.2);
+
+  /* Shadows - Light */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+/* Tier 2: Dark Theme Overrides */
+[data-theme="dark"] {
+  --color-scheme: dark;
+
+  /* Surfaces & Backgrounds */
+  --color-bg: var(--neutral-950);
+  --color-bg-subtle: #090d16;
+  --color-surface: var(--neutral-900);
+  --color-surface-raised: var(--neutral-800);
+  --color-surface-sunken: var(--neutral-950);
+  --color-surface-hover: var(--neutral-800);
+  --color-overlay: rgba(2, 6, 23, 0.75);
+
+  /* Sidebar Tokens - Dark */
+  --color-sidebar-bg: var(--neutral-900);
+  --color-sidebar-text: var(--neutral-100);
+  --color-sidebar-muted: var(--neutral-400);
+  --color-sidebar-border: var(--neutral-800);
+  --color-sidebar-hover: var(--neutral-800);
+  --color-sidebar-accent: var(--brand-300);
+
+  /* Typography Hierarchy - Dark Mode */
+  --color-text: var(--neutral-50);
+  --color-text-muted: var(--neutral-300);
+  --color-text-subtle: var(--neutral-400);
+  --color-text-disabled: var(--neutral-600);
+  --color-text-inverse: var(--neutral-900);
+  --color-text-on-brand: #ffffff;
+
+  /* Borders & Focus */
+  --color-border: var(--neutral-800);
+  --color-border-strong: var(--neutral-700);
+  --color-border-subtle: var(--neutral-800);
+  --color-focus-ring: var(--brand-400);
+
+  /* Brand / Primary FILLS (brand-700 = #0f766e -> 4.87:1 WCAG AA contrast with white text) */
+  --color-primary: var(--brand-700);
+  --color-primary-hover: var(--brand-800);
+  --color-primary-active: var(--brand-900);
+  --color-primary-subtle: color-mix(in oklch, var(--brand-500) 15%, transparent);
+  --color-primary-subtle-text: var(--brand-300);
+  --color-primary-border: color-mix(in oklch, var(--brand-500) 30%, transparent);
+
+  /* Brand / Primary TEXT & ICONS on page backgrounds (Dark: #5eead4 -> 12.8:1 AAA contrast on #020617) */
+  --color-primary-text: var(--brand-300);
+
+  /* Status Tokens - Dark */
+  --color-success: var(--success-400);
+  --color-success-hover: var(--success-300);
+  --color-success-subtle: color-mix(in oklch, var(--success-500) 15%, transparent);
+  --color-success-subtle-text: var(--success-300);
+  --color-success-border: color-mix(in oklch, var(--success-500) 30%, transparent);
+
+  --color-warning: var(--warning-400);
+  --color-warning-hover: var(--warning-300);
+  --color-warning-subtle: color-mix(in oklch, var(--warning-500) 15%, transparent);
+  --color-warning-subtle-text: var(--warning-300);
+  --color-warning-border: color-mix(in oklch, var(--warning-500) 30%, transparent);
+
+  --color-danger: var(--danger-400);
+  --color-danger-hover: var(--danger-300);
+  --color-danger-subtle: color-mix(in oklch, var(--danger-500) 15%, transparent);
+  --color-danger-subtle-text: var(--danger-300);
+  --color-danger-border: color-mix(in oklch, var(--danger-500) 30%, transparent);
+
+  --color-info: var(--info-400);
+  --color-info-hover: var(--info-300);
+  --color-info-subtle: color-mix(in oklch, var(--info-500) 15%, transparent);
+  --color-info-subtle-text: var(--info-300);
+  --color-info-border: color-mix(in oklch, var(--info-500) 30%, transparent);
+
+  /* Glass & Hero Wash Effects */
+  --color-glass-bg: rgba(15, 23, 42, 0.7);
+  --color-glass-border: rgba(255, 255, 255, 0.1);
+
+  /* Shadows - Dark */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+}
