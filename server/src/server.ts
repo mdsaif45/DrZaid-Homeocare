@@ -1,4 +1,3 @@
-// @ts-nocheck
 import express, { Express } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -7,6 +6,8 @@ import rateLimit from 'express-rate-limit';
 import { errorHandler } from './middleware/errorHandler.js';
 import { logger } from './utils/logger.js';
 import { db } from './config/database.js';
+import { envConfig } from './config/env.js';
+import { getDb } from './config/sqlite.js';
 
 // Import routes
 import authRoutes from './routes/authRoutes.js';
@@ -15,6 +16,7 @@ import caseRecordRoutes from './routes/caseRecordRoutes.js';
 import vitalsRoutes from './routes/vitalsRoutes.js';
 import investigationRoutes from './routes/investigationRoutes.js';
 import prescriptionRoutes from './routes/prescriptionRoutes.js';
+import aiRoutes from './routes/aiRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -49,6 +51,7 @@ app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
     message: 'Dr. Zaid Homeocare API is running',
+    provider: envConfig.dbProvider,
     timestamp: new Date().toISOString(),
   });
 });
@@ -58,6 +61,7 @@ app.get('/api', (req, res) => {
   res.json({
     message: 'Welcome to Dr. Zaid Homeocare API',
     version: '1.0.0',
+    provider: envConfig.dbProvider,
     endpoints: {
       health: '/health',
       auth: '/api/auth',
@@ -78,21 +82,27 @@ app.use('/api/case-records', caseRecordRoutes);
 app.use('/api/vitals', vitalsRoutes);
 app.use('/api/investigations', investigationRoutes);
 app.use('/api/prescriptions', prescriptionRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);
 
-// Database connection test
+// Database connection test & server start
 const startServer = async () => {
   try {
-    // Test database connection
-    await db.query('SELECT NOW()');
-    logger.info('✅ Database connected successfully');
+    if (envConfig.dbProvider === 'postgres' || envConfig.dbProvider === 'drizzle') {
+      await db.query('SELECT NOW()');
+      logger.info('✅ PostgreSQL Database connected successfully');
+    } else {
+      await getDb();
+      logger.info('✅ SQLite Database (homeocare.sqlite) connected & seeded successfully');
+    }
 
     // Start server
     app.listen(PORT, () => {
       logger.info(`🚀 Server running on http://localhost:${PORT}`);
       logger.info(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+      logger.info(`🗄️ Database Provider: ${envConfig.dbProvider}`);
       logger.info(`🔗 API Documentation: http://localhost:${PORT}/api`);
     });
   } catch (error) {
@@ -104,7 +114,6 @@ const startServer = async () => {
 // Handle unhandled rejections
 process.on('unhandledRejection', (reason, promise) => {
   logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  // Application specific logging, throwing an error, or other logic here
 });
 
 // Start the server

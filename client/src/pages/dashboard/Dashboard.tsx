@@ -1,124 +1,248 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { usePatientStore } from '../../store/patientStore';
+import patientService, { AnalyticsData } from '../../services/patientService';
+import prescriptionService from '../../services/prescriptionService';
 import { useNavigate } from 'react-router-dom';
+import { Users, Calendar, TrendingUp, Stethoscope, Pill, Plus, Search, Activity, Clock, CalendarDays, FileText } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { ChartCard } from '../../components/ui/ChartCard';
+import { OverviewCard, OverviewItem } from '../../components/ui/OverviewCard';
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, BarChart, Bar } from 'recharts';
 
 export default function Dashboard() {
   const { user } = useAuthStore();
   const { stats, fetchStats } = usePatientStore();
   const navigate = useNavigate();
 
+  const [analytics, setAnalytics] = useState<AnalyticsData>({
+    visits: [],
+    topRemedies: [],
+  });
+  const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(true);
+  const [visitTimeframe, setVisitTimeframe] = useState('This Year');
+  const [remedyTimeframe, setRemedyTimeframe] = useState('This Year');
+
+  const [upcomingFollowUps, setUpcomingFollowUps] = useState<number>(0);
+
+  const handleFetchAnalytics = useCallback(async (timeframe: string) => {
+    setIsLoadingAnalytics(true);
+    try {
+      const data = await patientService.getAnalytics(timeframe);
+      setAnalytics(data);
+    } catch (err) {
+      console.error('Failed to load analytics:', err);
+    } finally {
+      setIsLoadingAnalytics(false);
+    }
+  }, []);
+
   useEffect(() => {
+    let isMounted = true;
     fetchStats();
-  }, [fetchStats]);
+
+    patientService.getAnalytics(visitTimeframe)
+      .then((data) => {
+        if (isMounted) {
+          setAnalytics(data);
+          setIsLoadingAnalytics(false);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load analytics:', err);
+        if (isMounted) setIsLoadingAnalytics(false);
+      });
+
+    prescriptionService
+      .getUpcomingFollowUps(7)
+      .then((items) => {
+        if (isMounted) setUpcomingFollowUps(items.length);
+      })
+      .catch(() => {
+        if (isMounted) setUpcomingFollowUps(0);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [fetchStats, visitTimeframe]);
 
   const firstName = user?.full_name?.split(' ').slice(-1)[0] ?? 'Doctor';
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Welcome banner */}
-      <div className="relative bg-slate-900 rounded-2xl p-8 overflow-hidden">
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-20 -right-20 w-64 h-64 bg-teal-600/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-teal-400/10 rounded-full blur-2xl" />
+      <div className="relative overflow-hidden rounded-2xl bg-surface border border-border p-6 sm:p-8 shadow-md transition-colors">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
+          <div className="absolute bottom-0 left-0 h-48 w-48 rounded-full bg-primary/5 blur-2xl" />
         </div>
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div className="relative z-10 flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
           <div>
-            <p className="text-teal-400 text-sm font-semibold mb-1">{new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-            <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2">Good {getGreeting()}, Dr. {firstName}</h2>
-            <p className="text-slate-400 text-sm">Here's a summary of your practice today.</p>
+            <p className="mb-1 text-xs sm:text-sm font-semibold text-primary">
+              {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </p>
+            <h2 className="mb-2 text-2xl font-extrabold text-text sm:text-3xl flex items-center gap-2">
+              Good {getGreeting()}, Dr. {firstName} <span className="animate-bounce inline-block">👋</span>
+            </h2>
+            <p className="text-xs sm:text-sm text-text-muted">Here's a summary of your homeopathic practice today.</p>
           </div>
-          <button
+          <Button
             onClick={() => navigate('/dashboard/patients/new')}
-            className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white px-5 py-3 rounded-xl text-sm font-bold transition-all shadow-lg shadow-teal-600/30 active:scale-95 whitespace-nowrap"
+            variant="primary"
+            size="lg"
+            className="whitespace-nowrap shadow-lg w-full sm:w-auto justify-center"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
+            <Plus className="mr-2 h-5 w-5" />
             New Patient
-          </button>
+          </Button>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* KPI Counting Cards */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {[
-          { label: 'Total Patients', value: stats?.total ?? 0, icon: '👥', color: 'teal', sub: 'All time' },
-          { label: 'Registered Today', value: stats?.today ?? 0, icon: '📅', color: 'blue', sub: 'Today' },
-          { label: 'New This Week', value: stats?.thisWeek ?? 0, icon: '📈', color: 'violet', sub: 'This week' },
-          { label: 'This Month', value: stats?.thisMonth ?? 0, icon: '🗓️', color: 'amber', sub: 'This month' },
+          { label: 'Total Patients', value: stats?.total ?? 0, icon: <Users className="h-5 w-5 text-primary" />, sub: 'All time' },
+          { label: 'Registered Today', value: stats?.today ?? 0, icon: <Calendar className="h-5 w-5 text-info" />, sub: 'Today' },
+          { label: 'New This Week', value: stats?.thisWeek ?? 0, icon: <TrendingUp className="h-5 w-5 text-success" />, sub: 'This week' },
+          { label: 'Prescriptions Issued', value: stats?.thisMonth ?? 0, icon: <Pill className="h-5 w-5 text-warning" />, sub: 'This month' },
         ].map(({ label, value, icon, sub }) => (
-          <div key={label} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between mb-4">
-              <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-xl">{icon}</div>
+          <Card key={label} className="p-4 sm:p-5 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-bg-subtle border border-border shrink-0">
+                  {icon}
+                </div>
+                <p className="text-2xl font-extrabold text-text leading-none">{value}</p>
+              </div>
+              <span className="text-[11px] text-text-muted font-medium self-start">{sub}</span>
             </div>
-            <p className="text-2xl font-extrabold text-slate-900 mb-1">{value}</p>
-            <p className="text-sm font-semibold text-slate-700">{label}</p>
-            <p className="text-xs text-slate-400 mt-0.5">{sub}</p>
-          </div>
+            <p className="text-xs font-bold text-text-muted mt-2">{label}</p>
+          </Card>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Quick actions */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-          <div className="flex items-center justify-between mb-5">
-            <h3 className="text-base font-extrabold text-slate-900">Patient Management</h3>
-            <button onClick={() => navigate('/dashboard/patients')} className="text-xs font-bold text-teal-600 hover:text-teal-700">
-              View all →
+      {/* Recharts Analytics Section */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <ChartCard
+          icon={<Activity className="h-5 w-5 text-primary" />}
+          title="Patient Visit Trends"
+          selectedTimeframe={visitTimeframe}
+          onTimeframeChange={(val) => {
+            setVisitTimeframe(val);
+            handleFetchAnalytics(val);
+          }}
+        >
+          {isLoadingAnalytics ? (
+            <div className="flex h-full items-center justify-center text-xs text-text-muted">Loading visit trends...</div>
+          ) : analytics.visits.length === 0 || analytics.visits.every((v) => v.visits === 0) ? (
+            <div className="flex h-full flex-col items-center justify-center text-text-muted space-y-1">
+              <Activity className="h-8 w-8 text-text-disabled mb-1" />
+              <p className="text-xs font-semibold">No visit trend records yet</p>
+              <p className="text-[11px] text-text-muted">Register new patients to populate real-time analytics.</p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={analytics.visits} margin={{ top: 10, right: 20, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorVisits" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="month" stroke="var(--color-text-subtle)" fontSize={11} tickLine={false} />
+                <YAxis stroke="var(--color-text-subtle)" fontSize={11} tickLine={false} allowDecimals={false} />
+                <Tooltip contentStyle={{ backgroundColor: 'var(--color-surface-raised)', borderRadius: '8px', color: 'var(--color-text)', border: '1px solid var(--color-border)' }} />
+                <Area type="monotone" dataKey="visits" stroke="var(--color-primary)" strokeWidth={3} fillOpacity={1} fill="url(#colorVisits)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
+        </ChartCard>
+
+        <ChartCard
+          icon={<Pill className="h-5 w-5 text-warning" />}
+          title="Top Prescribed Remedies"
+          selectedTimeframe={remedyTimeframe}
+          onTimeframeChange={(val) => {
+            setRemedyTimeframe(val);
+            handleFetchAnalytics(val);
+          }}
+        >
+          {isLoadingAnalytics ? (
+            <div className="flex h-full items-center justify-center text-xs text-text-muted">Loading remedy statistics...</div>
+          ) : analytics.topRemedies.length === 0 ? (
+            <div className="flex h-full flex-col items-center justify-center text-text-muted space-y-1">
+              <Pill className="h-8 w-8 text-text-disabled mb-1" />
+              <p className="text-xs font-semibold">No prescriptions issued yet</p>
+              <p className="text-[11px] text-text-muted">Issue prescriptions to track top remedies in real-time.</p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={analytics.topRemedies} margin={{ top: 10, right: 20, left: -20, bottom: 0 }}>
+                <XAxis dataKey="remedy" stroke="var(--color-text-subtle)" fontSize={11} tickLine={false} />
+                <YAxis stroke="var(--color-text-subtle)" fontSize={11} tickLine={false} allowDecimals={false} />
+                <Tooltip contentStyle={{ backgroundColor: 'var(--color-surface-raised)', borderRadius: '8px', color: 'var(--color-text)', border: '1px solid var(--color-border)' }} />
+                <Bar dataKey="count" fill="var(--color-warning)" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </ChartCard>
+      </div>
+
+      {/* Quick Actions & Practice Overview */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Quick Actions */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-base font-bold text-text">Quick Clinical Actions</CardTitle>
+            <button onClick={() => navigate('/dashboard/patients')} className="text-xs font-bold text-primary hover:underline cursor-pointer">
+              View All Actions →
             </button>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <ActionCard
-              icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>}
+              icon={<Stethoscope className="h-6 w-6 text-primary" />}
               title="Register Patient"
               desc="Onboard a new patient record"
               onClick={() => navigate('/dashboard/patients/new')}
-              primary
             />
             <ActionCard
-              icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>}
-              title="Search Records"
+              icon={<Search className="h-6 w-6 text-primary" />}
+              title="Search EMR Records"
               desc="Look up existing case files"
               onClick={() => navigate('/dashboard/patients')}
             />
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        {/* System status */}
-        <div className="space-y-4">
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-            <h3 className="text-sm font-extrabold text-slate-900 mb-4">System Status</h3>
-            <div className="space-y-3">
-              {[
-                { label: 'API Server', status: 'Online' },
-                { label: 'Database', status: 'Healthy' },
-                { label: 'Last Sync', status: 'Real-time' },
-              ].map(({ label, status }) => (
-                <div key={label} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-xs font-semibold text-slate-500">{label}</span>
-                  </div>
-                  <span className="text-xs font-bold text-slate-800">{status}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-teal-600 rounded-2xl p-5 text-white">
-            <h3 className="text-sm font-extrabold mb-1">Clinical Data Secured</h3>
-            <p className="text-teal-200 text-xs mb-4">JWT • PostgreSQL v15 • TLS</p>
-            <div className="grid grid-cols-2 gap-2">
-              {['Prescription Engine', 'Case Timelines', 'EMR Records', 'Audit Logs'].map(label => (
-                <div key={label} className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-teal-300" />
-                  <span className="text-xs font-semibold text-teal-100">{label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        {/* Practice Overview */}
+        <OverviewCard title="Practice Overview">
+          <OverviewItem
+            icon={<CalendarDays className="h-5 w-5 text-info" />}
+            iconBg="bg-info-subtle text-info-subtle-text"
+            title="Upcoming Appointments"
+            subtitle="No appointments today"
+            count={0}
+            onClick={() => navigate('/dashboard/patients')}
+          />
+          <OverviewItem
+            icon={<Clock className="h-5 w-5 text-primary" />}
+            iconBg="bg-primary-subtle text-primary-subtle-text"
+            title="Pending Follow-ups"
+            subtitle={`${upcomingFollowUps} follow-ups pending this week`}
+            count={upcomingFollowUps}
+            onClick={() => navigate('/dashboard/patients')}
+          />
+          <OverviewItem
+            icon={<FileText className="h-5 w-5 text-warning" />}
+            iconBg="bg-warning-subtle text-warning-subtle-text"
+            title="Draft Prescriptions"
+            subtitle="0 drafts pending"
+            count={0}
+            onClick={() => navigate('/dashboard/patients')}
+          />
+        </OverviewCard>
       </div>
     </div>
   );
@@ -131,21 +255,18 @@ function getGreeting() {
   return 'Evening';
 }
 
-function ActionCard({ icon, title, desc, onClick, primary = false }: {
-  icon: React.ReactNode; title: string; desc: string; onClick: () => void; primary?: boolean;
+function ActionCard({ icon, title, desc, onClick }: {
+  icon: React.ReactNode; title: string; desc: string; onClick: () => void;
 }) {
   return (
-    <button onClick={onClick}
-      className={`flex items-start gap-4 p-5 rounded-xl text-left transition-all active:scale-95 border ${
-        primary
-          ? 'bg-slate-900 border-slate-900 text-white hover:bg-slate-800'
-          : 'bg-white border-slate-100 text-slate-900 hover:border-teal-200 hover:bg-teal-50/30'
-      }`}
+    <button
+      onClick={onClick}
+      className="flex items-start gap-3.5 rounded-xl border border-border bg-surface p-4 text-left transition-all hover:border-primary-border hover:bg-surface-hover active:scale-95 shadow-xs cursor-pointer"
     >
-      <div className={`mt-0.5 shrink-0 ${primary ? 'text-teal-400' : 'text-teal-600'}`}>{icon}</div>
+      <div className="mt-0.5 shrink-0">{icon}</div>
       <div>
-        <p className={`font-bold text-sm mb-0.5 ${primary ? 'text-white' : 'text-slate-900'}`}>{title}</p>
-        <p className={`text-xs ${primary ? 'text-slate-400' : 'text-slate-500'}`}>{desc}</p>
+        <p className="text-sm font-bold text-text mb-0.5">{title}</p>
+        <p className="text-xs text-text-muted">{desc}</p>
       </div>
     </button>
   );

@@ -1,9 +1,11 @@
 import winston from 'winston';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from 'fs';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const logsDir = path.join(process.cwd(), 'logs');
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir, { recursive: true });
+}
 
 // Define log format
 const logFormat = winston.format.combine(
@@ -32,14 +34,12 @@ export const logger = winston.createLogger({
   format: logFormat,
   defaultMeta: { service: 'drzaid-homeocare-api' },
   transports: [
-    // Write all logs with level 'error' and below to error.log
     new winston.transports.File({
-      filename: path.join(__dirname, '../../logs/error.log'),
+      filename: path.join(logsDir, 'error.log'),
       level: 'error',
     }),
-    // Write all logs with level 'info' and below to combined.log
     new winston.transports.File({
-      filename: path.join(__dirname, '../../logs/combined.log'),
+      filename: path.join(logsDir, 'combined.log'),
     }),
   ],
 });
@@ -51,13 +51,6 @@ if (process.env.NODE_ENV !== 'production') {
       format: consoleFormat,
     })
   );
-}
-
-// Create logs directory if it doesn't exist
-import fs from 'fs';
-const logsDir = path.join(__dirname, '../../logs');
-if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir, { recursive: true });
 }
 
 export default logger;

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { protect } from '../middleware/authMiddleware.js';
 import { updateVitals, deleteVitals } from '../controllers/caseRecordController.js';
 
-const router = Router();
+const router: Router = Router();
 
 // All routes require authentication
 router.use(protect);

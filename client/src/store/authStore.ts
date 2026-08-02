@@ -16,9 +16,12 @@ interface AuthState {
   initialize: () => void;
 }
 
+const initialUser = authService.getStoredUser();
+const initialIsAuthenticated = !!(initialUser && authService.isAuthenticated());
+
 export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  isAuthenticated: false,
+  user: initialUser,
+  isAuthenticated: initialIsAuthenticated,
   isLoading: false,
   error: null,
 
@@ -52,7 +55,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       await authService.logout();
       set({ user: null, isAuthenticated: false, isLoading: false, error: null });
     } catch (error) {
-      // Still clear user on error
       set({ user: null, isAuthenticated: false, isLoading: false });
     }
   },
@@ -77,6 +79,8 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     if (storedUser && isAuthenticated) {
       set({ user: storedUser, isAuthenticated: true });
+    } else {
+      set({ user: null, isAuthenticated: false });
     }
   },
 }));

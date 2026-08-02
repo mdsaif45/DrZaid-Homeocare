@@ -1,5 +1,7 @@
 import { Prescription } from '../../services/prescriptionService';
 import { format } from 'date-fns';
+import { Edit2, Trash2, Pill, Clock, Calendar } from 'lucide-react';
+import { Badge, IconButton } from '../ui';
 
 interface PrescriptionCardProps {
   prescription: Prescription;
@@ -15,34 +17,36 @@ export default function PrescriptionCard({
   showActions = true,
 }: PrescriptionCardProps) {
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+    <div className="bg-surface border border-border rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
       {/* Header */}
       <div className="flex justify-between items-start mb-3">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">{prescription.remedy_name}</h3>
+          <h3 className="text-base font-semibold text-text">{prescription.remedy_name}</h3>
           {prescription.potency && (
-            <span className="inline-block px-2 py-1 bg-teal-100 text-teal-700 text-xs rounded-full mt-1">
-              {prescription.potency}
-            </span>
+            <div className="mt-1">
+              <Badge variant="primary">{prescription.potency}</Badge>
+            </div>
           )}
         </div>
         {showActions && (
-          <div className="flex gap-2">
+          <div className="flex gap-1">
             {onEdit && (
-              <button
+              <IconButton
+                icon={<Edit2 className="w-4 h-4 text-primary" />}
+                aria-label="Edit prescription"
+                variant="ghost"
+                size="sm"
                 onClick={() => onEdit(prescription.id)}
-                className="text-blue-600 hover:text-blue-800 text-sm"
-              >
-                <span className="material-icons text-sm">edit</span>
-              </button>
+              />
             )}
             {onDelete && (
-              <button
+              <IconButton
+                icon={<Trash2 className="w-4 h-4 text-danger" />}
+                aria-label="Delete prescription"
+                variant="ghost"
+                size="sm"
                 onClick={() => onDelete(prescription.id)}
-                className="text-red-600 hover:text-red-800 text-sm"
-              >
-                <span className="material-icons text-sm">delete</span>
-              </button>
+              />
             )}
           </div>
         )}
@@ -51,41 +55,41 @@ export default function PrescriptionCard({
       {/* Prescription Details */}
       <div className="space-y-2 text-sm">
         {prescription.dosage && (
-          <div className="flex items-start gap-2">
-            <span className="material-icons text-gray-400 text-sm">medication</span>
+          <div className="flex items-center gap-2">
+            <Pill className="w-4 h-4 text-text-muted shrink-0" />
             <div>
-              <span className="text-gray-500">Dosage:</span>
-              <span className="ml-2 text-gray-900">{prescription.dosage}</span>
+              <span className="text-text-muted">Dosage:</span>
+              <span className="ml-2 font-medium text-text">{prescription.dosage}</span>
             </div>
           </div>
         )}
 
         {prescription.repetition && (
-          <div className="flex items-start gap-2">
-            <span className="material-icons text-gray-400 text-sm">schedule</span>
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4 text-text-muted shrink-0" />
             <div>
-              <span className="text-gray-500">Frequency:</span>
-              <span className="ml-2 text-gray-900">{prescription.repetition}</span>
+              <span className="text-text-muted">Frequency:</span>
+              <span className="ml-2 font-medium text-text">{prescription.repetition}</span>
             </div>
           </div>
         )}
 
-        <div className="flex items-start gap-2">
-          <span className="material-icons text-gray-400 text-sm">calendar_today</span>
+        <div className="flex items-center gap-2">
+          <Calendar className="w-4 h-4 text-text-muted shrink-0" />
           <div>
-            <span className="text-gray-500">Prescribed on:</span>
-            <span className="ml-2 text-gray-900">
+            <span className="text-text-muted">Prescribed on:</span>
+            <span className="ml-2 font-medium text-text">
               {format(new Date(prescription.prescription_date), 'MMM dd, yyyy')}
             </span>
           </div>
         </div>
 
         {prescription.follow_up_date && (
-          <div className="flex items-start gap-2">
-            <span className="material-icons text-gray-400 text-sm">event</span>
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-primary shrink-0" />
             <div>
-              <span className="text-gray-500">Follow-up:</span>
-              <span className="ml-2 text-gray-900">
+              <span className="text-text-muted">Follow-up:</span>
+              <span className="ml-2 font-medium text-primary-subtle-text">
                 {format(new Date(prescription.follow_up_date), 'MMM dd, yyyy')}
               </span>
             </div>
@@ -93,9 +97,9 @@ export default function PrescriptionCard({
         )}
 
         {prescription.instructions && (
-          <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-            <p className="text-xs text-gray-500 mb-1">Instructions</p>
-            <p className="text-sm text-gray-700">{prescription.instructions}</p>
+          <div className="mt-3 p-3 bg-bg-subtle border border-border rounded-lg">
+            <p className="text-xs text-text-subtle font-semibold mb-1">Instructions</p>
+            <p className="text-sm text-text">{prescription.instructions}</p>
           </div>
         )}
       </div>

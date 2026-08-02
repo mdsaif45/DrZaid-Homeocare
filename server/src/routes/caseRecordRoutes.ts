@@ -18,7 +18,7 @@ import {
   deleteInvestigation,
 } from '../controllers/caseRecordController.js';
 
-const router = Router();
+const router: Router = Router();
 
 // All routes require authentication
 router.use(protect);
